@@ -1,0 +1,7 @@
+{
+  "name": "Webasto SDA - Deviation AI:pproval",
+  "description": "Enterprise-grade digital solution for Webasto Supplier Deviation Approval with AI-powered risk assessment, completeness checks, and automated approval routing.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

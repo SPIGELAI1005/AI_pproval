@@ -1,0 +1,104 @@
+
+<!DOCTYPE html>
+<html lang="en" style="color-scheme: light;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deviation AI:pproval</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+      
+      :root {
+        --webasto-blue: #00305d;
+        --apple-blue: #007aff;
+      }
+
+      body { 
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+        background: radial-gradient(at 0% 0%, hsla(210,100%,95%,1) 0, transparent 50%), 
+                    radial-gradient(at 50% 0%, hsla(225,39%,90%,1) 0, transparent 50%), 
+                    radial-gradient(at 100% 0%, hsla(339,49%,90%,1) 0, transparent 50%);
+        background-attachment: fixed;
+        min-height: 100vh;
+      }
+
+      .glass {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+      }
+
+      .glass-dark {
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      /* Apple-like Segmented Control */
+      .segmented-control {
+        background: rgba(0, 0, 0, 0.05);
+        padding: 4px;
+        border-radius: 12px;
+      }
+
+      .spotlight {
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .spotlight::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at var(--x) var(--y), rgba(255,255,255,0.4) 0%, transparent 80%);
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+      }
+
+      .spotlight:hover::before {
+        opacity: 1;
+      }
+
+      @keyframes slideIn {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+
+      .animate-slide-in {
+        animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.35.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="text-slate-900 overflow-hidden">
+    <div id="root"></div>
+    <script>
+      // Global mouse move listener for spotlight effect
+      document.addEventListener('mousemove', (e) => {
+        document.querySelectorAll('.spotlight').forEach(el => {
+          const rect = el.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          el.style.setProperty('--x', `${x}px`);
+          el.style.setProperty('--y', `${y}px`);
+        });
+      });
+    </script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
