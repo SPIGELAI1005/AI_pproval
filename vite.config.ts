@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => {
         host: '0.0.0.0',
       },
       plugins: [react()],
+      publicDir: 'public',
       define: {
         'process.env.API_KEY': JSON.stringify(env.AI_API_KEY || env.API_KEY || env.GEMINI_API_KEY || env.OPENAI_API_KEY || env.ANTHROPIC_API_KEY),
         'process.env.AI_API_KEY': JSON.stringify(env.AI_API_KEY),

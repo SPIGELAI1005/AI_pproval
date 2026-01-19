@@ -1,0 +1,29 @@
+{
+  "name": "AI:PPROVAL - Supplier Deviation Approval",
+  "short_name": "AI:PPROVAL",
+  "description": "High-Fidelity Enterprise Quality Management System for Webasto Supplier Deviation Approval",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#007aff",
+  "orientation": "portrait-primary",
+  "icons": [],
+  "categories": ["business", "productivity"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "New Deviation",
+      "short_name": "New",
+      "description": "Create a new supplier deviation",
+      "url": "/?tab=new",
+      "icons": []
+    },
+    {
+      "name": "Approvals",
+      "short_name": "Approve",
+      "description": "View pending approvals",
+      "url": "/?tab=approvals",
+      "icons": []
+    }
+  ]
+}

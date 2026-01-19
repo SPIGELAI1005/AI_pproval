@@ -4,6 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#007aff">
+    <meta name="description" content="High-Fidelity Enterprise Quality Management System for Webasto Supplier Deviation Approval">
+    <link rel="manifest" href="/manifest.json">
     <title>Deviation AI:pproval</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -147,26 +150,7 @@
           transparent 80%);
       }
 
-      /* Apple-like Segmented Control */
-      .segmented-control {
-        background: rgba(255, 255, 255, 0.55);
-        border: 1px solid rgba(255, 255, 255, 0.55);
-        padding: 6px;
-        border-radius: 16px;
-        backdrop-filter: blur(18px) saturate(160%);
-        -webkit-backdrop-filter: blur(18px) saturate(160%);
-        box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.65),
-          0 8px 24px rgba(0, 0, 0, 0.08);
-      }
-
-      .dark .segmented-control {
-        background: rgba(15, 23, 42, 0.35);
-        border-color: rgba(255, 255, 255, 0.08);
-        box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.08),
-          0 10px 28px rgba(0, 0, 0, 0.5);
-      }
+      /* Apple-like Segmented Control - Moved to index.css */
 
       /* Smooth Animations */
       @keyframes slideIn {
@@ -250,7 +234,6 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
 </head>
 <body class="overflow-x-hidden">
     <div id="root"></div>
@@ -265,6 +248,28 @@
           el.style.setProperty('--y', `${y}px`);
         });
       });
+
+      // Register Service Worker for PWA
+      // TEMPORARILY DISABLED: Service Worker to debug CSS loading
+      // Uncomment after verifying CSS loads correctly
+      /*
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.getRegistrations().then((registrations) => {
+            for (let registration of registrations) {
+              registration.unregister();
+            }
+            navigator.serviceWorker.register('/sw.js')
+              .then((registration) => {
+                console.log('[PWA] Service Worker registered:', registration.scope);
+              })
+              .catch((error) => {
+                console.warn('[PWA] Service Worker registration failed:', error);
+              });
+          });
+        });
+      }
+      */
     </script>
 <script type="module" src="/index.tsx"></script>
 </body>

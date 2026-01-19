@@ -21,6 +21,9 @@ import VisionUpload from './components/VisionUpload';
 import ApprovalTimeline from './components/ApprovalTimeline';
 import AdaptiveCardPreview from './components/AdaptiveCardPreview';
 import { AdaptiveCardsService } from './services/adaptiveCardsService';
+import RiskHeatmap from './components/RiskHeatmap';
+import OfflineIndicator from './components/OfflineIndicator';
+import { OfflineService } from './services/offlineService';
 
 function getStatusPill(status: WorkflowStatus): { label: string; className: string } {
   const base =
@@ -167,6 +170,12 @@ const App: React.FC = () => {
   const [checkingConflicts, setCheckingConflicts] = useState(false);
   const conflictDetectionService = React.useMemo(() => new ConflictDetectionService(), []);
   const conflictCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const offlineService = React.useMemo(() => new OfflineService(), []);
+
+  // Initialize offline service
+  useEffect(() => {
+    offlineService.initialize().catch(console.error);
+  }, [offlineService]);
 
   function calculateRouting(classification: DeviationRecord['classification'], safety: boolean): ApprovalStep[] {
     const steps: ApprovalStep[] = [
@@ -372,6 +381,9 @@ const App: React.FC = () => {
              <ActivityFeed />
           </div>
        </div>
+       
+       {/* Advanced Analytics - Risk Heatmap */}
+       <RiskHeatmap />
     </div>
   );
 
@@ -809,16 +821,43 @@ const App: React.FC = () => {
                         </>
                       )}
                     </button>
-                    <button className="footer-pill footer-pill-muted">Save Draft</button>
+                    <button 
+                      className="footer-pill footer-pill-muted"
+                      onClick={async () => {
+                        try {
+                          await offlineService.saveOffline(deviation);
+                          await offlineService.queueAction('update', deviation);
+                          alert('Draft saved' + (navigator.onLine ? '' : ' (will sync when online)'));
+                        } catch (error) {
+                          console.error('Failed to save draft:', error);
+                          alert('Failed to save draft. Please try again.');
+                        }
+                      }}
+                    >
+                      Save Draft
+                    </button>
                     <button 
                       className="footer-pill footer-pill-primary" 
-                      onClick={() => {
+                      onClick={async () => {
                         const hasBlocking = conflictAlerts.some(c => c.severity === 'blocking');
                         if (hasBlocking) {
                           alert('Cannot submit: Blocking conflicts detected. Please review and resolve conflicts before submission.');
                           return;
                         }
-                        setActiveTab('approvals');
+                        
+                        // Queue submission action
+                        try {
+                          await offlineService.queueAction('update', { ...deviation, status: WorkflowStatus.Submitted });
+                          if (navigator.onLine) {
+                            // In production, would make API call here
+                            setActiveTab('approvals');
+                          } else {
+                            alert('Submission queued. Will be processed when online.');
+                          }
+                        } catch (error) {
+                          console.error('Failed to queue submission:', error);
+                          alert('Failed to submit. Please try again.');
+                        }
                       }}
                       disabled={conflictAlerts.some(c => c.severity === 'blocking')}
                     >
@@ -1088,17 +1127,26 @@ const App: React.FC = () => {
   );
 
   return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
-      <div className="h-full">
-        {activeTab === 'dashboard' && renderDashboard()}
-        {activeTab === 'new' && renderNewDeviation()}
-        {activeTab === 'approvals' && renderApprovals()}
-        {activeTab === 'archive' && renderArchive()}
-        {activeTab === 'compliance' && renderCompliance()}
-        {activeTab === 'faq' && <FAQ />}
-        {activeTab === 'admin' && renderAdmin()}
-      </div>
-    </Layout>
+    <>
+      <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
+        <div className="h-full">
+          {activeTab === 'dashboard' && renderDashboard()}
+          {activeTab === 'new' && renderNewDeviation()}
+          {activeTab === 'approvals' && renderApprovals()}
+          {activeTab === 'archive' && renderArchive()}
+          {activeTab === 'compliance' && renderCompliance()}
+          {activeTab === 'faq' && <FAQ />}
+          {activeTab === 'admin' && renderAdmin()}
+        </div>
+      </Layout>
+      <OfflineIndicator 
+        onSyncComplete={(result) => {
+          if (result.success > 0) {
+            console.log(`[PWA] Synced ${result.success} actions successfully`);
+          }
+        }}
+      />
+    </>
   );
 };
 
