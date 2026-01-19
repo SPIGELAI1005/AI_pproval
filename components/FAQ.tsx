@@ -151,7 +151,7 @@ const FAQ: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 animate-slide-in pb-20">
+    <div className="max-w-7xl mx-auto space-y-8 pb-20">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-1">

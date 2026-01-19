@@ -6,9 +6,10 @@ interface LayoutProps {
   children: React.ReactNode;
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  onAIPanelOpen?: () => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) => {
+const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onAIPanelOpen }) => {
   const { effectiveTheme, toggleTheme } = useTheme();
   const isDark = effectiveTheme === 'dark';
 
@@ -29,6 +30,26 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
         </div>
         
         <div className="flex items-center gap-3 md:gap-6">
+          {/* I A:M Q Button */}
+          <button
+            onClick={() => {
+              if (onAIPanelOpen) onAIPanelOpen();
+            }}
+            className={`flex items-center gap-2 px-3 py-2 sm:px-4 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 relative z-10 flex-shrink-0 ${
+              isDark
+                ? 'bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 hover:from-emerald-500/30 hover:to-emerald-600/30 text-emerald-400 border border-emerald-500/30'
+                : 'bg-gradient-to-r from-emerald-500/15 to-emerald-600/15 hover:from-emerald-500/25 hover:to-emerald-600/25 text-emerald-600 border border-emerald-500/20'
+            } shadow-lg shadow-emerald-500/20`}
+            title="Open I A:M Q - AI Intelligence Layer"
+          >
+            <div className="h-6 w-6 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center text-white shadow-md shadow-emerald-500/30 flex-shrink-0">
+              <i className="fa-solid fa-comment-dots text-sm scale-x-[-1]"></i>
+            </div>
+            <span className="text-xs font-extrabold uppercase tracking-wider hidden sm:block whitespace-nowrap">
+              I&nbsp;&nbsp;A:M&nbsp;&nbsp;Q
+            </span>
+          </button>
+
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}

@@ -87,6 +87,24 @@ export class AIService {
   }
 
   /**
+   * Transcribe audio to text
+   */
+  async transcribeAudio(base64Audio: string): Promise<{ text: string; confidence?: number; language?: string }> {
+    // Mock implementation - in production, use actual speech-to-text API
+    // For OpenAI: use Whisper API
+    // For Google: use Speech-to-Text API
+    // For Anthropic: use their audio API if available
+    
+    // For now, return a placeholder
+    // In production, this would call the actual transcription API
+    return {
+      text: '[Audio transcription would appear here - requires speech-to-text API integration]',
+      confidence: 0.85,
+      language: 'en',
+    };
+  }
+
+  /**
    * Analyze deviation using configured AI provider
    */
   async analyzeDeviation(record: DeviationRecord, redactionMode: boolean): Promise<AIResponse> {

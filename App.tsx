@@ -24,6 +24,8 @@ import { AdaptiveCardsService } from './services/adaptiveCardsService';
 import RiskHeatmap from './components/RiskHeatmap';
 import OfflineIndicator from './components/OfflineIndicator';
 import { OfflineService } from './services/offlineService';
+import VoiceAssistant from './components/VoiceAssistant';
+import GlobalAIPanel from './components/GlobalAIPanel';
 
 function getStatusPill(status: WorkflowStatus): { label: string; className: string } {
   const base =
@@ -171,6 +173,7 @@ const App: React.FC = () => {
   const conflictDetectionService = React.useMemo(() => new ConflictDetectionService(), []);
   const conflictCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const offlineService = React.useMemo(() => new OfflineService(), []);
+  const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
 
   // Initialize offline service
   useEffect(() => {
@@ -365,7 +368,7 @@ const App: React.FC = () => {
   };
 
   const renderDashboard = () => (
-    <div className="space-y-8 animate-slide-in max-w-[1600px] mx-auto">
+    <div className="space-y-8 max-w-[1600px] mx-auto">
        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard title="Total Deviations" value="124" trend="+12% vs last month" icon="fa-chart-line" color="text-[#007aff] dark:text-[#60a5fa]" />
           <StatCard title="Pending Approvals" value="3" trend="2 urgent" icon="fa-clock" color="text-amber-600 dark:text-amber-400" />
@@ -391,7 +394,7 @@ const App: React.FC = () => {
     if (selectedApprovalId) {
       const selected = MOCK_APPROVALS.find(a => a.id === selectedApprovalId);
       return (
-        <div className="max-w-[1400px] mx-auto space-y-8 animate-slide-in">
+        <div className="max-w-[1400px] mx-auto space-y-8">
           <button onClick={() => setSelectedApprovalId(null)} className="flex items-center gap-2 text-[#007aff] font-bold text-sm hover:translate-x-[-4px] transition-transform">
              <i className="fa-solid fa-arrow-left"></i> Back to Queue
           </button>
@@ -436,7 +439,7 @@ const App: React.FC = () => {
       );
     }
     return (
-      <div className="max-w-[1400px] mx-auto space-y-8 animate-slide-in">
+      <div className="max-w-[1400px] mx-auto space-y-8">
         <h2 className="text-3xl font-extrabold ui-heading dark:text-slate-100 transition-colors">Approvals Queue</h2>
         <div className="grid grid-cols-1 gap-4">
            {MOCK_APPROVALS.map(a => (
@@ -458,7 +461,7 @@ const App: React.FC = () => {
   };
 
   const renderArchive = () => (
-    <div className="max-w-[1400px] mx-auto space-y-8 animate-slide-in">
+    <div className="max-w-[1400px] mx-auto space-y-8">
        <h2 className="text-3xl font-extrabold ui-heading dark:text-slate-100 transition-colors">Historical Records</h2>
        <div className="glass glass-highlight spotlight rounded-[32px] overflow-hidden hover-lift">
           <table className="w-full text-left">
@@ -497,7 +500,7 @@ const App: React.FC = () => {
   );
 
   const renderCompliance = () => (
-    <div className="max-w-[1400px] mx-auto space-y-8 animate-slide-in">
+    <div className="max-w-[1400px] mx-auto space-y-8">
        <h2 className="text-3xl font-extrabold ui-heading dark:text-slate-100 transition-colors">Audit Readiness Center</h2>
        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="glass glass-highlight spotlight p-6 rounded-[32px] text-center hover-lift">
@@ -514,7 +517,7 @@ const App: React.FC = () => {
 
   const renderAdmin = () => {
     return (
-      <div className="max-w-7xl mx-auto space-y-10 animate-slide-in pb-20">
+      <div className="max-w-7xl mx-auto space-y-10 pb-20">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div className="space-y-1">
              <h2 className="text-3xl font-extrabold ui-heading dark:text-slate-100 transition-colors">Administration Console</h2>
@@ -769,7 +772,7 @@ const App: React.FC = () => {
   };
 
   const renderNewDeviation = () => (
-    <div className="flex flex-col lg:flex-row lg:items-stretch gap-8 animate-slide-in max-w-[1800px] mx-auto w-full">
+    <div className="flex flex-col lg:flex-row lg:items-stretch gap-8 max-w-[1800px] mx-auto w-full">
       <div className="flex-[2] glass glass-highlight spotlight rounded-[32px] shadow-xl flex flex-col hover-lift">
         <div className="p-10 shrink-0">
           <div className="max-w-5xl mx-auto w-full">
@@ -1128,7 +1131,7 @@ const App: React.FC = () => {
 
   return (
     <>
-      <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
+      <Layout activeTab={activeTab} setActiveTab={setActiveTab} onAIPanelOpen={() => setIsAIPanelOpen(true)}>
         <div className="h-full">
           {activeTab === 'dashboard' && renderDashboard()}
           {activeTab === 'new' && renderNewDeviation()}
@@ -1146,6 +1149,29 @@ const App: React.FC = () => {
           }
         }}
       />
+      {/* Global AI Panel - accessible from header */}
+      <GlobalAIPanel
+        isOpen={isAIPanelOpen}
+        onClose={() => setIsAIPanelOpen(false)}
+        deviation={activeTab === 'new' ? deviation : undefined}
+        aiAnalysis={activeTab === 'new' ? aiAnalysis : undefined}
+        loadingAI={loadingAI}
+        onAnalyze={activeTab === 'new' ? handleAIAnalysis : undefined}
+        redactionMode={redactionMode}
+        setRedactionMode={activeTab === 'new' ? setRedactionMode : undefined}
+        onDeviationUpdate={activeTab === 'new' ? (updates) => {
+          setDeviation({ ...deviation, ...updates });
+        } : undefined}
+      />
+      {/* Voice Assistant - only on New Deviation page (floating button) */}
+      {activeTab === 'new' && (
+        <VoiceAssistant 
+          deviation={deviation}
+          onUpdate={(updates) => {
+            setDeviation({ ...deviation, ...updates });
+          }}
+        />
+      )}
     </>
   );
 };

@@ -46,7 +46,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ data, loading, onAnalyze, red
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-500 dark:to-emerald-400 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 dark:shadow-emerald-500/40 relative group/icon">
                <i className="fa-solid fa-sparkles text-[10px] absolute top-1.5 right-1.5 opacity-60 group-hover/icon:opacity-100 transition-opacity text-white"></i>
-               <i className="fa-solid fa-comment-dots text-lg"></i>
+               <i className="fa-solid fa-comment-dots text-lg scale-x-[-1]"></i>
             </div>
             <div>
               <h3 className="text-lg font-extrabold ui-heading tracking-tighter transition-colors">I&nbsp;&nbsp;A:M&nbsp;&nbsp;Q</h3>
