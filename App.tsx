@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Layout from './components/Layout';
 import RiskTable from './components/RiskTable';
 import ActionTable from './components/ActionTable';
@@ -10,21 +10,80 @@ import {
   ApprovalStep, AIResponse 
 } from './types';
 import { BUs, TRIGGERS, DURATIONS, PLANTS, FIELD_DESCRIPTIONS } from './constants';
-import { GeminiService } from './services/geminiService';
+import { AIService } from './services/aiService';
 import { TranslationService, SupportedLanguage } from './services/translationService';
 import { PDFExportService } from './services/pdfExportService';
+import { ConflictDetectionService, ConflictAlert } from './services/conflictDetectionService';
+import { ConflictAlertsPanel } from './components/ConflictAlert';
+import FAQ from './components/FAQ';
+import EightDGenerator from './components/EightDGenerator';
+import VisionUpload from './components/VisionUpload';
+import ApprovalTimeline from './components/ApprovalTimeline';
+import AdaptiveCardPreview from './components/AdaptiveCardPreview';
+import { AdaptiveCardsService } from './services/adaptiveCardsService';
+
+function getStatusPill(status: WorkflowStatus): { label: string; className: string } {
+  const base =
+    'px-6 py-3 rounded-full border text-[10px] font-black uppercase transition-colors';
+
+  // Map non-requested statuses into the closest UX bucket
+  if (status === WorkflowStatus.Expired) {
+    return {
+      label: 'Overdue',
+      className: `${base} bg-purple-200 dark:bg-purple-900/25 border-purple-400 dark:border-purple-800 text-purple-950 dark:text-purple-300 shadow-sm`,
+    };
+  }
+
+  const map: Record<WorkflowStatus, { label: string; className: string }> = {
+    [WorkflowStatus.Draft]: {
+      label: 'Draft',
+      className: `${base} bg-amber-200 dark:bg-amber-900/25 border-amber-400 dark:border-amber-800 text-amber-950 dark:text-amber-300 shadow-sm`,
+    },
+    [WorkflowStatus.Rejected]: {
+      label: 'Rejected',
+      className: `${base} bg-red-200 dark:bg-red-900/25 border-red-400 dark:border-red-800 text-red-950 dark:text-red-300 shadow-sm`,
+    },
+    [WorkflowStatus.Approved]: {
+      label: 'Approved',
+      className: `${base} bg-emerald-200 dark:bg-emerald-900/25 border-emerald-400 dark:border-emerald-800 text-emerald-950 dark:text-emerald-300 shadow-sm`,
+    },
+    [WorkflowStatus.InReview]: {
+      label: 'In Review',
+      className: `${base} bg-blue-200 dark:bg-blue-900/25 border-blue-400 dark:border-blue-800 text-blue-950 dark:text-blue-300 shadow-sm`,
+    },
+    // Treat Submitted as In Review (blue) in UI
+    [WorkflowStatus.Submitted]: {
+      label: 'In Review',
+      className: `${base} bg-blue-200 dark:bg-blue-900/25 border-blue-400 dark:border-blue-800 text-blue-950 dark:text-blue-300 shadow-sm`,
+    },
+    // Expired handled above to label as Overdue
+    [WorkflowStatus.Expired]: {
+      label: 'Overdue',
+      className: `${base} bg-purple-200 dark:bg-purple-900/25 border-purple-400 dark:border-purple-800 text-purple-950 dark:text-purple-300 shadow-sm`,
+    },
+    [WorkflowStatus.Closed]: {
+      label: 'Closed',
+      className: `${base} bg-slate-300 dark:bg-slate-800/60 border-slate-400 dark:border-slate-700 text-slate-950 dark:text-slate-300 shadow-sm`,
+    },
+  };
+
+  return map[status] ?? {
+    label: String(status),
+    className: `${base} bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300`,
+  };
+}
 
 const InfoIcon = ({ text }: { text?: string }) => {
   if (!text) return null;
   return (
     <div className="relative group/info inline-block align-middle ml-1.5">
-      <i className="fa-solid fa-circle-info text-[10px] text-slate-300 hover:text-[#007aff] transition-colors cursor-help"></i>
-      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-56 p-4 bg-white rounded-2xl shadow-[0_16px_32px_rgba(0,0,0,0.12)] border border-slate-100 opacity-0 invisible group-hover/info:opacity-100 group-hover/info:visible transition-all z-[100] pointer-events-none">
-        <div className="text-[10px] font-bold text-slate-800 leading-relaxed mb-1 uppercase tracking-widest border-b border-slate-50 pb-2 text-left">Information</div>
-        <p className="text-[10px] font-medium text-slate-500 leading-relaxed text-left normal-case">
+      <i className="fa-solid fa-circle-info text-[10px] ui-text-tertiary hover:text-[#007aff] transition-colors cursor-help"></i>
+      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-56 p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-[0_16px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_16px_32px_rgba(0,0,0,0.6)] border border-slate-100 dark:border-slate-700 opacity-0 invisible group-hover/info:opacity-100 group-hover/info:visible transition-all z-[100] pointer-events-none">
+        <div className="text-[10px] font-bold ui-text-primary leading-relaxed mb-1 uppercase tracking-widest border-b border-slate-100 dark:border-slate-700 pb-2 text-left">Information</div>
+        <p className="text-[10px] font-medium ui-text-secondary leading-relaxed text-left normal-case">
           {text}
         </p>
-        <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-white"></div>
+        <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-white dark:border-t-slate-800"></div>
       </div>
     </div>
   );
@@ -33,7 +92,7 @@ const InfoIcon = ({ text }: { text?: string }) => {
 const FormField = ({ label, children, className = "", description }: { label: string; children?: React.ReactNode; className?: string; description?: string }) => (
   <div className={`space-y-1.5 group min-w-0 ${className}`}>
     <div className="flex items-center px-1">
-      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block transition-colors group-focus-within:text-[#007aff]">
+      <label className="text-[10px] font-black ui-label block group-focus-within:text-[#007aff]">
         {label}
       </label>
       <InfoIcon text={description} />
@@ -104,6 +163,10 @@ const App: React.FC = () => {
   const [translating, setTranslating] = useState(false);
   const [translationResult, setTranslationResult] = useState<{ confidence: number; termsPreserved: string[] } | null>(null);
   const [exportingPDF, setExportingPDF] = useState(false);
+  const [conflictAlerts, setConflictAlerts] = useState<ConflictAlert[]>([]);
+  const [checkingConflicts, setCheckingConflicts] = useState(false);
+  const conflictDetectionService = React.useMemo(() => new ConflictDetectionService(), []);
+  const conflictCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   function calculateRouting(classification: DeviationRecord['classification'], safety: boolean): ApprovalStep[] {
     const steps: ApprovalStep[] = [
@@ -172,17 +235,65 @@ const App: React.FC = () => {
       if (field === 'productSafetyRelevant') {
         updatedApprovals = calculateRouting(prev.classification, value);
       }
-      return { ...prev, masterData: updatedMD, approvals: updatedApprovals };
+      const updated = { ...prev, masterData: updatedMD, approvals: updatedApprovals };
+      
+      // Check for conflicts when material or deviation details change
+      if (field === 'materialNo' || field === 'supplierName' || field === 'plant') {
+        checkConflictsDebounced(updated);
+      }
+      
+      return updated;
     });
   };
+
+  const updateDetails = (field: string, value: any) => {
+    setDeviation(prev => {
+      const updated = { ...prev, details: { ...prev.details, [field]: value } };
+      checkConflictsDebounced(updated);
+      return updated;
+    });
+  };
+
+  // Debounced conflict checking
+  const checkConflictsDebounced = React.useCallback((deviation: DeviationRecord) => {
+    // Clear existing timeout
+    if (conflictCheckTimeoutRef.current) {
+      clearTimeout(conflictCheckTimeoutRef.current);
+    }
+
+    // Set new timeout for debounced check
+    conflictCheckTimeoutRef.current = setTimeout(async () => {
+      setCheckingConflicts(true);
+      try {
+        const result = await conflictDetectionService.checkSimilarityConflicts(deviation);
+        setConflictAlerts(result.conflicts);
+      } catch (error) {
+        console.error('Conflict check error:', error);
+      } finally {
+        setCheckingConflicts(false);
+      }
+    }, 1000); // Wait 1 second after user stops typing
+  }, [conflictDetectionService]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (conflictCheckTimeoutRef.current) {
+        clearTimeout(conflictCheckTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleAIAnalysis = async () => {
     setLoadingAI(true);
     try {
-      const gemini = new GeminiService();
-      const result = await gemini.analyzeDeviation(deviation, redactionMode);
+      const aiService = new AIService();
+      const result = await aiService.analyzeDeviation(deviation, redactionMode);
       setAIAnalysis(result);
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+      console.error('AI Analysis error:', e);
+      alert('AI analysis failed. Please check your API key configuration.');
+    }
     finally { setLoadingAI(false); }
   };
 
@@ -247,17 +358,17 @@ const App: React.FC = () => {
   const renderDashboard = () => (
     <div className="space-y-8 animate-slide-in max-w-[1600px] mx-auto">
        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard title="Total Deviations" value="124" trend="+12% vs last month" icon="fa-chart-line" color="text-[#007aff]" />
-          <StatCard title="Pending Approvals" value="3" trend="2 urgent" icon="fa-clock" color="text-amber-500" />
-          <StatCard title="Avg. Cycle Time" value="4.2d" trend="-0.8d improved" icon="fa-bolt" color="text-emerald-500" />
-          <StatCard title="IATF Risk Score" value="92" trend="Compliance: High" icon="fa-shield-check" color="text-purple-500" />
+          <StatCard title="Total Deviations" value="124" trend="+12% vs last month" icon="fa-chart-line" color="text-[#007aff] dark:text-[#60a5fa]" />
+          <StatCard title="Pending Approvals" value="3" trend="2 urgent" icon="fa-clock" color="text-amber-600 dark:text-amber-400" />
+          <StatCard title="Avg. Cycle Time" value="4.2d" trend="-0.8d improved" icon="fa-bolt" color="text-emerald-600 dark:text-emerald-400" />
+          <StatCard title="Compliance Risk Score" value="92" trend="Compliance: High" icon="fa-shield-halved" color="text-purple-600 dark:text-purple-400" />
        </div>
        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          <div className="xl:col-span-2 glass rounded-[32px] p-8 border border-white/50 space-y-10">
-             <h2 className="text-2xl font-extrabold text-[#00305d]">Performance Analytics</h2>
+          <div className="xl:col-span-2 glass glass-highlight spotlight rounded-[32px] p-8 space-y-10 hover-lift">
+             <h2 className="text-2xl font-extrabold ui-heading" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>Performance Analytics</h2>
              <AnalyticsCharts />
           </div>
-          <div className="glass rounded-[32px] p-8 border border-white/50 shadow-sm flex flex-col">
+          <div className="glass glass-highlight spotlight rounded-[32px] p-8 shadow-sm flex flex-col hover-lift">
              <ActivityFeed />
           </div>
        </div>
@@ -273,25 +384,25 @@ const App: React.FC = () => {
              <i className="fa-solid fa-arrow-left"></i> Back to Queue
           </button>
           <div className="flex flex-col xl:flex-row gap-8">
-             <div className="flex-1 glass rounded-[32px] border border-white/50 p-8 space-y-8">
-                <h2 className="text-2xl font-black text-[#00305d]">{selected?.title}</h2>
+               <div className="flex-1 glass rounded-[32px] border border-white/50 p-8 space-y-8">
+                <h2 className="text-2xl font-black ui-heading dark:text-slate-100 transition-colors">{selected?.title}</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                    <div className="space-y-1">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Supplier</p>
-                      <p className="text-sm font-bold text-slate-800">{selected?.supplier}</p>
+                      <p className="ui-label">Supplier</p>
+                      <p className="text-sm font-bold ui-text-primary">{selected?.supplier}</p>
                    </div>
                    <div className="space-y-1">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Material</p>
-                      <p className="text-sm font-bold text-slate-800">{selected?.material}</p>
+                      <p className="ui-label">Material</p>
+                      <p className="text-sm font-bold ui-text-primary">{selected?.material}</p>
                    </div>
                    <div className="space-y-1">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">RPN Score</p>
-                      <p className="text-sm font-bold text-red-600">{selected?.rpn}</p>
+                      <p className="ui-label">RPN Score</p>
+                      <p className="text-sm font-bold text-red-600 dark:text-red-400 transition-colors">{selected?.rpn}</p>
                    </div>
                 </div>
              </div>
              <div className="w-full xl:w-96 glass rounded-[32px] border border-white/50 p-8 shadow-xl">
-                <h3 className="text-lg font-extrabold text-[#00305d] mb-6">Decision Center</h3>
+               <h3 className="text-lg font-extrabold ui-heading dark:text-slate-100 mb-6 transition-colors">Decision Center</h3>
                 <textarea 
                   className="apple-input mb-4" 
                   rows={4} 
@@ -302,11 +413,11 @@ const App: React.FC = () => {
                 <button 
                   disabled={isDecisionSubmitting}
                   onClick={() => { setIsDecisionSubmitting(true); setTimeout(() => { setSelectedApprovalId(null); setIsDecisionSubmitting(false); }, 1000); }}
-                  className="w-full bg-emerald-500 text-white py-4 rounded-2xl font-bold mb-3"
+                  className="apple-btn-success mb-3"
                 >
                   {isDecisionSubmitting ? 'Submitting...' : 'Approve'}
                 </button>
-                <button className="w-full bg-red-50 text-red-600 py-4 rounded-2xl font-bold">Reject</button>
+                <button className="apple-btn-danger">Reject</button>
              </div>
           </div>
         </div>
@@ -314,15 +425,15 @@ const App: React.FC = () => {
     }
     return (
       <div className="max-w-[1400px] mx-auto space-y-8 animate-slide-in">
-        <h2 className="text-3xl font-extrabold text-[#00305d]">Approvals Queue</h2>
+        <h2 className="text-3xl font-extrabold ui-heading dark:text-slate-100 transition-colors">Approvals Queue</h2>
         <div className="grid grid-cols-1 gap-4">
            {MOCK_APPROVALS.map(a => (
-              <div key={a.id} onClick={() => setSelectedApprovalId(a.id)} className="glass p-6 rounded-[32px] border hover:border-[#007aff] transition-all cursor-pointer flex justify-between items-center group">
+              <div key={a.id} onClick={() => setSelectedApprovalId(a.id)} className="glass glass-highlight spotlight p-6 rounded-[32px] hover-lift hover-glow transition-all cursor-pointer flex justify-between items-center group">
                  <div>
-                    <span className="text-[10px] font-black text-slate-400 uppercase">{a.id}</span>
-                    <h3 className="text-lg font-black text-slate-800">{a.title}</h3>
+                    <span className="text-[10px] font-black ui-text-secondary uppercase">{a.id}</span>
+                    <h3 className="text-lg font-black ui-text-primary">{a.title}</h3>
                  </div>
-                 <i className="fa-solid fa-chevron-right text-slate-300 group-hover:translate-x-1 transition-transform"></i>
+                 <i className="fa-solid fa-chevron-right ui-text-tertiary group-hover:text-[#007aff] group-hover:translate-x-1 transition-all"></i>
               </div>
            ))}
         </div>
@@ -336,33 +447,34 @@ const App: React.FC = () => {
 
   const renderArchive = () => (
     <div className="max-w-[1400px] mx-auto space-y-8 animate-slide-in">
-       <h2 className="text-3xl font-extrabold text-[#00305d]">Historical Records</h2>
-       <div className="glass rounded-[32px] overflow-hidden">
+       <h2 className="text-3xl font-extrabold ui-heading dark:text-slate-100 transition-colors">Historical Records</h2>
+       <div className="glass glass-highlight spotlight rounded-[32px] overflow-hidden hover-lift">
           <table className="w-full text-left">
-             <thead className="bg-slate-50 border-b border-slate-100">
+             <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700 transition-colors">
                 <tr>
-                   <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">ID</th>
-                   <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">Component</th>
-                   <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">RPN</th>
-                   <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-400">Status</th>
+                   <th className="px-8 py-5 text-[10px] font-black uppercase ui-label">ID</th>
+                   <th className="px-8 py-5 text-[10px] font-black uppercase ui-label">Component</th>
+                   <th className="px-8 py-5 text-[10px] font-black uppercase ui-label">RPN</th>
+                   <th className="px-8 py-5 text-[10px] font-black uppercase ui-label">Status</th>
                 </tr>
              </thead>
              <tbody>
                 {MOCK_HISTORY.map(h => (
                    <tr key={h.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
                       <td className="px-8 py-5 font-bold text-sm">{h.id}</td>
-                      <td className="px-8 py-5 text-xs text-slate-600">{h.material}</td>
-                      <td className={`px-8 py-5 font-bold text-xs ${h.rpn >= 125 ? 'text-red-500' : h.rpn >= 60 ? 'text-amber-500' : 'text-slate-700'}`}>
+                      <td className="px-8 py-5 text-xs ui-text-secondary">{h.material}</td>
+                      <td className={`px-8 py-5 font-bold text-xs ${h.rpn >= 125 ? 'text-red-500' : h.rpn >= 60 ? 'text-amber-500' : 'ui-text-primary'}`}>
                         {h.rpn}
                       </td>
                       <td className="px-8 py-5">
-                        <span className={`text-[10px] font-black px-2 py-1 rounded uppercase shadow-sm ${
-                          h.status === WorkflowStatus.Approved ? 'bg-emerald-500 text-white' : 
-                          h.status === WorkflowStatus.Rejected ? 'bg-red-600 text-white' : 
-                          'bg-slate-500 text-white'
-                        }`}>
-                          {h.status}
-                        </span>
+                        {(() => {
+                          const pill = getStatusPill(h.status);
+                          return (
+                            <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase ${pill.className}`}>
+                              {pill.label}
+                            </span>
+                          );
+                        })()}
                       </td>
                    </tr>
                 ))}
@@ -374,15 +486,15 @@ const App: React.FC = () => {
 
   const renderCompliance = () => (
     <div className="max-w-[1400px] mx-auto space-y-8 animate-slide-in">
-       <h2 className="text-3xl font-extrabold text-[#00305d]">Audit Readiness Center</h2>
+       <h2 className="text-3xl font-extrabold ui-heading dark:text-slate-100 transition-colors">Audit Readiness Center</h2>
        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="glass p-6 rounded-[32px] border border-white/50 text-center">
-             <p className="text-2xl font-black text-emerald-500">92.4%</p>
-             <p className="text-[10px] font-black text-slate-400 uppercase">Documentation Health</p>
+          <div className="glass glass-highlight spotlight p-6 rounded-[32px] text-center hover-lift">
+             <p className="text-2xl font-black text-emerald-500 dark:text-emerald-400 transition-colors">92.4%</p>
+             <p className="text-[10px] font-black ui-label mt-2">Documentation Health</p>
           </div>
-          <div className="glass p-6 rounded-[32px] border border-white/50 text-center">
-             <p className="text-2xl font-black text-amber-500">88.1%</p>
-             <p className="text-[10px] font-black text-slate-400 uppercase">CA Closure</p>
+          <div className="glass glass-highlight spotlight p-6 rounded-[32px] text-center hover-lift">
+             <p className="text-2xl font-black text-amber-500 dark:text-amber-400 transition-colors">88.1%</p>
+             <p className="text-[10px] font-black ui-label mt-2">CA Closure</p>
           </div>
        </div>
     </div>
@@ -393,8 +505,8 @@ const App: React.FC = () => {
       <div className="max-w-7xl mx-auto space-y-10 animate-slide-in pb-20">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div className="space-y-1">
-             <h2 className="text-3xl font-extrabold text-[#00305d]">Administration Console</h2>
-             <p className="text-slate-400 font-medium">Control governance, users, and AI parameters for Global SDA.</p>
+             <h2 className="text-3xl font-extrabold ui-heading dark:text-slate-100 transition-colors">Administration Console</h2>
+             <p className="ui-text-secondary font-medium">Control governance, users, and AI parameters for Global SDA.</p>
           </div>
           <div className="segmented-control flex gap-1 p-1 shadow-sm border border-slate-200/50">
              {[
@@ -406,7 +518,9 @@ const App: React.FC = () => {
                  key={sec.id}
                  onClick={() => setAdminSection(sec.id as any)} 
                  className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
-                   adminSection === sec.id ? 'bg-white text-[#007aff] shadow-md' : 'text-slate-500 hover:text-slate-700'
+                   adminSection === sec.id 
+                     ? 'bg-white dark:bg-slate-700 text-[#007aff] shadow-md' 
+                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                  }`}
                >
                  <i className={`fa-solid ${sec.icon}`}></i>
@@ -420,8 +534,8 @@ const App: React.FC = () => {
           <div className="glass rounded-[32px] border border-white/50 overflow-hidden shadow-xl">
             <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-white/40">
                <div>
-                  <h3 className="text-lg font-black text-slate-800">IAM & Directory</h3>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Total active users: 1,402</p>
+                  <h3 className="text-lg font-black ui-heading">IAM & Directory</h3>
+                  <p className="text-[10px] font-black ui-label mt-1">Total active users: 1,402</p>
                </div>
                <button className="apple-btn-primary px-6 py-2.5 text-xs flex items-center gap-2">
                   <i className="fa-solid fa-plus"></i> Invite User
@@ -430,7 +544,7 @@ const App: React.FC = () => {
             <div className="overflow-x-auto">
                <table className="w-full text-left">
                   <thead>
-                    <tr className="bg-slate-50/50 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 border-b border-slate-100">
+                    <tr className="bg-slate-50/50 dark:bg-slate-800/50 text-[10px] font-black uppercase tracking-[0.2em] ui-label border-b border-slate-100 dark:border-slate-700">
                       <th className="px-8 py-5">Full Name / Profile</th>
                       <th className="px-8 py-5">Global Role</th>
                       <th className="px-8 py-5">BU Scope</th>
@@ -446,27 +560,27 @@ const App: React.FC = () => {
                       { name: 'Hans Müller', role: 'Plant Director', bu: 'ET (Arad)', status: 'Away', color: 'bg-amber-50 text-amber-600', time: '3 days ago' },
                       { name: 'Yuki Tanaka', role: 'Quality Lead', bu: 'RT (Yokohama)', status: 'Active', color: 'bg-blue-50 text-blue-600', time: '1 hour ago' },
                     ].map((user, i) => (
-                      <tr key={i} className="hover:bg-white/60 transition-colors group">
+                      <tr key={i} className="hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors group">
                         <td className="px-8 py-6">
                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 bg-gradient-to-tr from-slate-200 to-white rounded-2xl flex items-center justify-center text-slate-400 border border-slate-100">
+                              <div className="h-10 w-10 bg-gradient-to-tr from-slate-200 to-white dark:from-slate-700 dark:to-slate-600 rounded-2xl flex items-center justify-center text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-700 transition-colors">
                                  <i className="fa-solid fa-user-tie"></i>
                               </div>
                               <div>
-                                 <p className="text-sm font-bold text-slate-800">{user.name}</p>
-                                 <p className="text-[10px] text-slate-400">george.neacsu@webasto.com</p>
+                                 <p className="text-sm font-bold ui-text-primary">{user.name}</p>
+                                 <p className="text-[10px] ui-text-secondary">george.neacsu@webasto.com</p>
                               </div>
                            </div>
                         </td>
                         <td className="px-8 py-6">
-                           <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${user.color}`}>
+                           <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${user.color} dark:opacity-90`}>
                               {user.role}
                            </span>
                         </td>
-                        <td className="px-8 py-6 text-xs font-bold text-slate-600">{user.bu}</td>
-                        <td className="px-8 py-6 text-xs text-slate-400">{user.time}</td>
+                        <td className="px-8 py-6 text-xs font-bold ui-text-primary">{user.bu}</td>
+                        <td className="px-8 py-6 text-xs ui-text-secondary">{user.time}</td>
                         <td className="px-8 py-6 text-right">
-                           <button className="h-8 w-8 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-[#007aff] hover:border-[#007aff] transition-all">
+                           <button className="ui-icon-btn">
                               <i className="fa-solid fa-ellipsis"></i>
                            </button>
                         </td>
@@ -476,7 +590,7 @@ const App: React.FC = () => {
                </table>
             </div>
             <div className="p-6 bg-slate-50/50 border-t border-slate-100 flex justify-center">
-               <button className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600">Load More Stakeholders</button>
+               <button className="text-[10px] font-black uppercase tracking-[0.2em] ui-text-tertiary hover:ui-text-secondary">Load More Stakeholders</button>
             </div>
           </div>
         )}
@@ -487,8 +601,8 @@ const App: React.FC = () => {
                 <div className="glass rounded-[32px] border border-white/50 p-8 shadow-xl">
                    <div className="flex justify-between items-center mb-10">
                       <div>
-                         <h3 className="text-xl font-black text-slate-800">Global Routing Policies</h3>
-                         <p className="text-xs text-slate-500 font-medium">Automatic determination of required signatures.</p>
+                         <h3 className="text-xl font-black ui-heading">Global Routing Policies</h3>
+                         <p className="text-xs ui-text-secondary font-medium">Automatic determination of required signatures.</p>
                       </div>
                       <button className="apple-btn-secondary px-4 py-2 text-[10px]">Policy Audit Log</button>
                    </div>
@@ -507,7 +621,7 @@ const App: React.FC = () => {
                                  <i className="fa-solid fa-code-merge"></i>
                               </div>
                               <div>
-                                 <h4 className="text-sm font-black text-slate-800">{rule.title}</h4>
+                                 <h4 className="text-sm font-black ui-heading">{rule.title}</h4>
                                  <div className="flex items-center gap-2 mt-1">
                                     <span className="text-[10px] font-black uppercase tracking-widest text-[#007aff]">{rule.scope}</span>
                                     <span className="h-1 w-1 bg-slate-300 rounded-full"></span>
@@ -529,9 +643,9 @@ const App: React.FC = () => {
 
              <div className="space-y-8">
                 <div className="glass rounded-[32px] border border-white/50 p-8 shadow-xl bg-gradient-to-b from-blue-50/50 to-transparent">
-                   <h3 className="text-sm font-black text-[#00305d] uppercase tracking-widest mb-6">Matrix Simulator</h3>
+                   <h3 className="text-sm font-black ui-heading dark:text-slate-200 uppercase tracking-widest mb-6 transition-colors">Matrix Simulator</h3>
                    <div className="space-y-6">
-                      <p className="text-xs text-slate-500 leading-relaxed font-medium italic">Test your routing logic by simulating a deviation scenario.</p>
+                      <p className="text-xs ui-text-tertiary leading-relaxed font-medium italic">Test your routing logic by simulating a deviation scenario.</p>
                       
                       <div className="space-y-4">
                         <FormField label="Test Duration Category">
@@ -549,7 +663,7 @@ const App: React.FC = () => {
                       </div>
 
                       <div className="pt-6 border-t border-slate-200 space-y-4">
-                         <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Expected Approvers</h5>
+                         <h5 className="text-[10px] font-black ui-label">Expected Approvers</h5>
                          <div className="space-y-2">
                             {[1, 2, 3].map(j => <div key={j} className="h-8 bg-white/40 border border-white rounded-xl animate-pulse"></div>)}
                          </div>
@@ -568,8 +682,8 @@ const App: React.FC = () => {
                       <i className="fa-solid fa-brain"></i>
                    </div>
                    <div>
-                      <h3 className="text-2xl font-black text-[#00305d]">AI Governance & Tuning</h3>
-                      <p className="text-sm text-slate-400 font-medium">Configure how the Intelligence Layer audits and assists users.</p>
+                      <h3 className="text-2xl font-black ui-heading dark:text-slate-100 transition-colors">AI Governance & Tuning</h3>
+                      <p className="text-sm ui-text-secondary font-medium">Configure how the Intelligence Layer audits and assists users.</p>
                    </div>
                 </div>
 
@@ -617,7 +731,7 @@ const App: React.FC = () => {
                             <i className="fa-solid fa-microchip"></i>
                             <span className="text-[10px] font-black uppercase tracking-widest">Compute Engine</span>
                          </div>
-                         <p className="text-[11px] font-medium text-white/40">Powered by <strong>Gemini 3 Pro Preview</strong>. Model behavior is limited by Webasto Data Sovereignty policies.</p>
+                         <p className="text-[11px] font-medium text-white/40">Powered by AI. Model behavior is limited by Webasto Data Sovereignty policies.</p>
                          <button className="w-full py-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all">Test Model Connectivity</button>
                       </div>
                    </div>
@@ -643,26 +757,96 @@ const App: React.FC = () => {
   };
 
   const renderNewDeviation = () => (
-    <div className="flex flex-col lg:flex-row gap-8 animate-slide-in h-full max-w-[1800px] mx-auto w-full">
-      <div className="flex-[2] glass rounded-[32px] border border-white/50 shadow-xl flex flex-col overflow-hidden">
+    <div className="flex flex-col lg:flex-row lg:items-stretch gap-8 animate-slide-in max-w-[1800px] mx-auto w-full">
+      <div className="flex-[2] glass glass-highlight spotlight rounded-[32px] shadow-xl flex flex-col hover-lift">
         <div className="p-10 shrink-0">
-          <div className="flex justify-between items-end mb-8">
-            <h2 className="text-3xl font-extrabold text-[#00305d]">{deviation.id}</h2>
-            <div className="px-5 py-2 bg-emerald-50 rounded-2xl border border-emerald-100 text-[10px] font-black text-emerald-600 uppercase">Status: DRAFT</div>
-          </div>
-          <div className="segmented-control flex gap-1">
-            {['classification', 'master', 'details', 'risks', 'actions', 'approvals'].map(tab => (
-              <button key={tab} onClick={() => setActiveFormTab(tab)} className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all ${activeFormTab === tab ? 'bg-white text-[#007aff] shadow-sm' : 'text-slate-500'}`}>
-                {tab.toUpperCase()}
-              </button>
-            ))}
+          <div className="max-w-5xl mx-auto w-full">
+            {/* Header Row - Title on Left, Timeline and Buttons on Right */}
+            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-8">
+              {/* Title on Left */}
+              <div className="flex-1">
+                <h2 className="text-3xl font-extrabold ui-heading">{deviation.id}</h2>
+                <p className="text-sm font-medium ui-text-secondary mt-1">
+                  {deviation.masterData.description || 'Supplier Deviation Approval Request'}
+                </p>
+              </div>
+
+              {/* Right Side - Timeline and Buttons */}
+              <div className="flex flex-col gap-4">
+                {/* Approval Timeline - Start from Status position */}
+                <div className="w-full">
+                  <ApprovalTimeline deviation={deviation} compact={true} />
+                </div>
+
+                {/* Buttons Row */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 w-full">
+                  {(() => {
+                    const pill = getStatusPill(deviation.status);
+                    return (
+                      <div className={pill.className}>
+                        Status: {pill.label}
+                      </div>
+                    );
+                  })()}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button className="footer-pill footer-pill-danger">
+                      Discard
+                    </button>
+                    <button 
+                      onClick={handleExportPDF}
+                      disabled={exportingPDF}
+                      className="footer-pill footer-pill-muted flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {exportingPDF ? (
+                        <>
+                          <i className="fa-solid fa-circle-notch animate-spin"></i>
+                          <span>Generating PDF...</span>
+                        </>
+                      ) : (
+                        <>
+                          <i className="fa-solid fa-file-pdf"></i>
+                          <span>Export PDF/A</span>
+                        </>
+                      )}
+                    </button>
+                    <button className="footer-pill footer-pill-muted">Save Draft</button>
+                    <button 
+                      className="footer-pill footer-pill-primary" 
+                      onClick={() => {
+                        const hasBlocking = conflictAlerts.some(c => c.severity === 'blocking');
+                        if (hasBlocking) {
+                          alert('Cannot submit: Blocking conflicts detected. Please review and resolve conflicts before submission.');
+                          return;
+                        }
+                        setActiveTab('approvals');
+                      }}
+                      disabled={conflictAlerts.some(c => c.severity === 'blocking')}
+                    >
+                      Submit
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="segmented-control grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1">
+              {['classification', 'master', 'details', 'risks', 'actions', 'approvals'].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveFormTab(tab)}
+                  className={`seg-btn ${activeFormTab === tab ? 'seg-btn-active' : 'seg-btn-inactive'}`}
+                >
+                  {tab.toUpperCase()}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto px-10 pb-10">
-          <div className="max-w-4xl mx-auto">
+        <div className="px-10 pb-10">
+          <div className="max-w-5xl mx-auto w-full">
             {activeFormTab === 'classification' && (
               <div className="space-y-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <FormField label="Language" description={FIELD_DESCRIPTIONS.language}>
                     <select value={deviation.classification.language} onChange={(e) => updateClassification('language', e.target.value)} className="apple-input apple-select">
                       <option value="English">English</option>
@@ -688,23 +872,23 @@ const App: React.FC = () => {
               </div>
               
               {/* Multi-Lingual Translation */}
-              <div className="glass rounded-[24px] border border-white/50 p-6 bg-gradient-to-br from-blue-50/50 to-transparent">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h4 className="text-sm font-extrabold text-[#00305d] mb-1">Technical Translation</h4>
-                    <p className="text-[10px] font-medium text-slate-500">Translate entire deviation while preserving technical terms</p>
+              <div className="glass glass-highlight rounded-[24px] p-6">
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div className="min-w-0">
+                    <h4 className="text-sm font-extrabold ui-heading mb-1">Technical Translation</h4>
+                    <p className="text-[10px] font-medium ui-text-secondary">Translate the deviation while preserving technical terms.</p>
                   </div>
-                  <div className="h-10 w-10 bg-blue-500 rounded-2xl flex items-center justify-center text-white">
+                  <div className="h-10 w-10 bg-[#007aff] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20 shrink-0">
                     <i className="fa-solid fa-language"></i>
                   </div>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   {(['English', 'Deutsch', '日本語'] as SupportedLanguage[]).filter(lang => lang !== deviation.classification.language).map(lang => (
                     <button
                       key={lang}
                       onClick={() => handleTranslate(lang)}
                       disabled={translating}
-                      className="flex-1 px-4 py-2.5 bg-white border border-white/80 rounded-xl text-xs font-bold text-slate-700 hover:bg-blue-50 hover:border-blue-200 hover:text-[#007aff] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="apple-btn-secondary flex-1 px-4 py-2.5 text-xs flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {translating ? (
                         <>
@@ -721,12 +905,12 @@ const App: React.FC = () => {
                   ))}
                 </div>
                 {translationResult && (
-                  <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                  <div className="mt-4 p-3 bg-emerald-50 dark:bg-emerald-900/25 border border-emerald-200 dark:border-emerald-800 rounded-xl transition-colors">
                     <div className="flex items-center gap-2 mb-1">
-                      <i className="fa-solid fa-check-circle text-emerald-600 text-xs"></i>
-                      <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Translation Complete</span>
+                      <i className="fa-solid fa-check-circle text-emerald-600 dark:text-emerald-400 text-xs transition-colors"></i>
+                      <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest transition-colors">Translation Complete</span>
                     </div>
-                    <p className="text-[10px] font-medium text-emerald-600">
+                    <p className="text-[10px] font-medium text-emerald-700/90 dark:text-emerald-300 transition-colors">
                       Confidence: {Math.round(translationResult.confidence * 100)}% • {translationResult.termsPreserved.length} technical terms preserved
                     </p>
                   </div>
@@ -736,7 +920,13 @@ const App: React.FC = () => {
             )}
             {activeFormTab === 'master' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                <button onClick={fetchERPData} className="sm:col-span-2 text-right text-[10px] font-black text-[#007aff] uppercase">Sync SAP ERP</button>
+                <button 
+                  onClick={fetchERPData} 
+                  className="sm:col-span-2 px-4 py-2 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 self-end ml-auto w-fit bg-blue-500 hover:bg-blue-600 dark:bg-blue-500 dark:hover:bg-blue-400 text-white rounded-xl border border-blue-400 dark:border-blue-600 shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 transition-all hover:scale-[1.02]"
+                >
+                  <i className="fa-solid fa-arrows-rotate text-xs"></i>
+                  <span>Sync SAP ERP</span>
+                </button>
                 <FormField label="Material No."><input type="text" className="apple-input" value={deviation.masterData.materialNo} onChange={e => updateMasterData('materialNo', e.target.value)} /></FormField>
                 <FormField label="Supplier Name"><input type="text" className="apple-input" value={deviation.masterData.supplierName} onChange={e => updateMasterData('supplierName', e.target.value)} /></FormField>
                 <FormField label="Webasto Plant">
@@ -744,68 +934,155 @@ const App: React.FC = () => {
                     {PLANTS.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </FormField>
-                <FormField label="Expiration Date"><input type="date" className="apple-input" value={deviation.masterData.expirationDate} onChange={e => updateMasterData('expirationDate', e.target.value)} /></FormField>
+                <FormField label="Expiration Date">
+                  <div className="relative">
+                    <input 
+                      type="date" 
+                      className="apple-input pl-10" 
+                      value={deviation.masterData.expirationDate} 
+                      onChange={e => updateMasterData('expirationDate', e.target.value)} 
+                    />
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10">
+                      <i className="fa-solid fa-calendar text-slate-500 dark:text-slate-400 text-sm"></i>
+                    </div>
+                  </div>
+                </FormField>
                 <label className="apple-toggle sm:col-span-2">
-                   <span className="font-bold text-sm text-slate-700">Product Safety Relevant</span>
+                   <span className="font-bold text-sm ui-text-primary">Product Safety Relevant</span>
                    <input type="checkbox" className="apple-checkbox" checked={deviation.masterData.productSafetyRelevant} onChange={e => updateMasterData('productSafetyRelevant', e.target.checked)} />
                 </label>
+                <FormField label="Product Safety Comment" className="sm:col-span-2">
+                  <textarea 
+                    className="apple-input min-h-[100px] resize-y" 
+                    placeholder="Add comments or notes regarding product safety relevance..."
+                    value={deviation.masterData.productSafetyComment || ''} 
+                    onChange={e => updateMasterData('productSafetyComment', e.target.value)} 
+                  />
+                </FormField>
               </div>
             )}
             {activeFormTab === 'details' && (
               <div className="space-y-8">
-                <FormField label="Specification Requirement"><textarea rows={5} className="apple-input resize-none" value={deviation.details.specification} onChange={e => setDeviation(prev => ({ ...prev, details: { ...prev.details, specification: e.target.value } }))} /></FormField>
-                <FormField label="Deviation Details"><textarea rows={5} className="apple-input resize-none" value={deviation.details.deviation} onChange={e => setDeviation(prev => ({ ...prev, details: { ...prev.details, deviation: e.target.value } }))} /></FormField>
+                {/* Conflict Alerts */}
+                {conflictAlerts.length > 0 && (
+                  <div className="glass rounded-[24px] border-2 border-red-200 p-6 bg-gradient-to-br from-red-50/50 to-transparent">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 bg-red-500 rounded-2xl flex items-center justify-center text-white">
+                          <i className="fa-solid fa-shield-exclamation"></i>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-extrabold text-red-700">Similarity Conflict Detection</h4>
+                          <p className="text-[10px] font-medium text-red-600">
+                            {checkingConflicts ? 'Checking...' : `${conflictAlerts.length} conflict(s) detected`}
+                          </p>
+                        </div>
+                      </div>
+                      {checkingConflicts && (
+                        <i className="fa-solid fa-circle-notch animate-spin text-red-500"></i>
+                      )}
+                    </div>
+                    <ConflictAlertsPanel
+                      conflicts={conflictAlerts}
+                      onDismiss={(index) => {
+                        setConflictAlerts(prev => prev.filter((_, i) => i !== index));
+                      }}
+                      onViewDetails={(deviationId) => {
+                        // In production, navigate to deviation details
+                        alert(`View details for ${deviationId}`);
+                      }}
+                    />
+                  </div>
+                )}
+
+                <FormField label="Specification Requirement"><textarea rows={5} className="apple-input resize-none" value={deviation.details.specification} onChange={e => updateDetails('specification', e.target.value)} /></FormField>
+                <FormField label="Deviation Details"><textarea rows={5} className="apple-input resize-none" value={deviation.details.deviation} onChange={e => updateDetails('deviation', e.target.value)} /></FormField>
+
+                <VisionUpload
+                  deviation={deviation}
+                  onAddRisks={(risks) => setDeviation(prev => ({ ...prev, risks: [...prev.risks, ...risks] }))}
+                />
               </div>
             )}
-            {activeFormTab === 'risks' && <RiskTable risks={deviation.risks} onUpdate={risks => setDeviation(prev => ({ ...prev, risks }))} />}
+            {activeFormTab === 'risks' && <RiskTable risks={deviation.risks} onUpdate={risks => setDeviation(prev => ({ ...prev, risks }))} deviation={deviation} />}
             {activeFormTab === 'actions' && (
               <div className="space-y-10">
-                <ActionTable actions={deviation.actions} type="Immediate" onUpdate={actions => setDeviation(prev => ({ ...prev, actions }))} />
-                <ActionTable actions={deviation.actions} type="Corrective" onUpdate={actions => setDeviation(prev => ({ ...prev, actions }))} />
+                <ActionTable actions={deviation.actions} type="Immediate" onUpdate={actions => setDeviation(prev => ({ ...prev, actions }))} deviation={deviation} />
+                <ActionTable actions={deviation.actions} type="Corrective" onUpdate={actions => setDeviation(prev => ({ ...prev, actions }))} deviation={deviation} />
+                <EightDGenerator deviation={deviation} />
               </div>
             )}
             {activeFormTab === 'approvals' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 {deviation.approvals.map(step => (
-                   <div key={step.id} className="p-4 bg-white/60 rounded-2xl border flex justify-between items-center">
-                      <div>
-                         <p className="text-[10px] font-black text-slate-400 uppercase">{step.role}</p>
-                         <p className="text-xs font-bold text-slate-700">TBD</p>
+              <div className="space-y-6">
+                <ApprovalTimeline deviation={deviation} compact={false} />
+                <div className="glass p-5 rounded-[24px] mb-2">
+                  <div className="flex items-start gap-3">
+                    <i className="fa-solid fa-route text-[#007aff] dark:text-[#60a5fa] text-lg mt-0.5"></i>
+                    <p className="text-xs ui-text-secondary leading-relaxed">
+                      <strong className="ui-text-primary font-bold">Approval Routing:</strong> Based on Business Unit, Trigger Code, and Duration Category. The workflow is automatically calculated.
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {deviation.approvals.map(step => (
+                    <div key={step.id} className="glass glass-highlight spotlight p-5 rounded-[24px] hover-lift transition-all group">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <p className="text-[10px] font-black ui-label mb-2">{step.role}</p>
+                          <p className="text-sm font-bold ui-text-primary">{step.status === 'Pending' ? 'TBD' : step.status}</p>
+                        </div>
+                        <span className={`text-[9px] font-black px-3 py-1.5 rounded-full ${
+                          step.status === 'Pending' 
+                            ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30' 
+                            : step.status === 'Approved'
+                            ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                            : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'
+                        }`}>
+                          {step.status}
+                        </span>
                       </div>
-                      <span className="text-[9px] font-black bg-slate-100 text-slate-400 px-2 py-1 rounded">{step.status}</span>
-                   </div>
-                 ))}
+                      {step.comments && (
+                        <p className="text-xs ui-text-secondary mt-2 italic">{step.comments}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Adaptive Cards Section */}
+                {deviation.approvals.some(s => s.status === 'Pending') && (
+                  <div className="mt-8">
+                    <h3 className="text-lg font-extrabold ui-heading mb-4">Send Approval Request via Chat</h3>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {deviation.approvals
+                        .filter(step => step.status === 'Pending')
+                        .map(step => (
+                          <div key={step.id}>
+                            <AdaptiveCardPreview
+                              deviation={deviation}
+                              approver={step.role}
+                              stepId={step.id}
+                              onSend={async (platform) => {
+                                const service = new AdaptiveCardsService();
+                                if (platform === 'teams') {
+                                  await service.sendToTeams(deviation, `${step.role}@webasto.com`, step.id);
+                                } else {
+                                  await service.sendToSlack(deviation, step.role.toLowerCase().replace(/\s+/g, '.'), step.id, '#approvals');
+                                }
+                              }}
+                            />
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
-        <div className="p-10 border-t border-white/50 flex justify-between items-center bg-white/40">
-          <button className="text-[10px] font-black text-slate-400 uppercase hover:text-red-500">Discard</button>
-          <div className="flex gap-4">
-            <button 
-              onClick={handleExportPDF}
-              disabled={exportingPDF}
-              className="apple-btn-secondary flex items-center gap-2 disabled:opacity-50"
-            >
-              {exportingPDF ? (
-                <>
-                  <i className="fa-solid fa-circle-notch animate-spin"></i>
-                  <span>Generating PDF...</span>
-                </>
-              ) : (
-                <>
-                  <i className="fa-solid fa-file-pdf"></i>
-                  <span>Export PDF/A</span>
-                </>
-              )}
-            </button>
-            <button className="apple-btn-secondary">Save Draft</button>
-            <button className="apple-btn-primary" onClick={() => setActiveTab('approvals')}>Submit</button>
-          </div>
-        </div>
+        {/* actions moved to header beside Status */}
       </div>
-      <div className="w-full lg:w-[400px] shrink-0">
-         <AIAssistant data={aiAnalysis} loading={loadingAI} onAnalyze={handleAIAnalysis} redactionMode={redactionMode} setRedactionMode={setRedactionMode} deviation={deviation} />
+      <div className="w-full lg:w-[400px] shrink-0 self-stretch">
+        <AIAssistant data={aiAnalysis} loading={loadingAI} onAnalyze={handleAIAnalysis} redactionMode={redactionMode} setRedactionMode={setRedactionMode} deviation={deviation} />
       </div>
     </div>
   );
@@ -818,30 +1095,38 @@ const App: React.FC = () => {
         {activeTab === 'approvals' && renderApprovals()}
         {activeTab === 'archive' && renderArchive()}
         {activeTab === 'compliance' && renderCompliance()}
+        {activeTab === 'faq' && <FAQ />}
         {activeTab === 'admin' && renderAdmin()}
       </div>
-      <style>{`
-        .apple-input { @apply w-full bg-white/60 border border-white/80 rounded-2xl px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm transition-all outline-none focus:bg-white focus:border-[#007aff]; }
-        .apple-toggle { @apply flex items-center justify-between p-5 rounded-[24px] bg-white/40 border border-white/40 hover:bg-white transition-all cursor-pointer; }
-        .apple-checkbox { @apply h-6 w-6 rounded-lg border-slate-200 text-[#007aff] focus:ring-[#007aff]; }
-        .apple-btn-primary { @apply bg-[#007aff] text-white px-8 py-3.5 rounded-2xl font-bold text-sm shadow-xl hover:scale-[1.03] transition-all disabled:opacity-50; }
-        .apple-btn-secondary { @apply bg-white text-slate-700 border border-white px-8 py-3.5 rounded-2xl font-bold text-sm shadow-sm hover:bg-slate-50 transition-all; }
-        .apple-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23334155' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' /%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1.25rem center; background-size: 1rem; }
-      `}</style>
     </Layout>
   );
 };
 
 const StatCard = ({ title, value, trend, icon, color }: any) => (
-  <div className="glass p-8 rounded-[32px] border border-white/50 relative overflow-hidden group">
-    <i className={`fa-solid ${icon} absolute -right-4 -top-4 text-6xl opacity-5 ${color}`}></i>
-    <div className="space-y-4">
-      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{title}</span>
-      <div>
-        <div className="text-4xl font-extrabold text-[#00305d]">{value}</div>
-        <div className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">{trend}</div>
+  <div className="glass glass-highlight spotlight p-8 rounded-[32px] relative overflow-hidden group hover-lift cursor-pointer">
+    <div className="flex items-start justify-between gap-4 relative z-10">
+      <div className="min-w-0">
+        <span className="text-[10px] font-black uppercase tracking-widest ui-text-tertiary">{title}</span>
+        <div className="mt-4">
+          <div className={`text-4xl font-extrabold ${color}`} style={{ textShadow: '0 2px 10px rgba(0,0,0,0.16)' }}>
+            {value}
+          </div>
+          <div className="ui-text-secondary text-[10px] font-bold mt-1 uppercase tracking-widest">
+            {trend}
+          </div>
+        </div>
+      </div>
+
+      <div className="relative shrink-0">
+        <div className="h-12 w-12 rounded-2xl border border-white/40 dark:border-white/10 bg-white/35 dark:bg-white/10 backdrop-blur-xl flex items-center justify-center shadow-[0_14px_34px_rgba(0,0,0,0.10)] dark:shadow-[0_18px_40px_rgba(0,0,0,0.55)] group-hover:scale-105 transition-transform">
+          <i className={`fa-solid ${icon} text-lg ${color}`}></i>
+        </div>
+        <div className={`absolute inset-0 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity ${color}`} />
       </div>
     </div>
+
+    {/* Glass highlight effect */}
+    <div className="absolute inset-0 rounded-[32px] bg-gradient-to-br from-white/18 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
   </div>
 );
 

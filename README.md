@@ -8,7 +8,7 @@ A **High-Fidelity Enterprise Quality Management System (QMS)** for Webasto Suppl
 
 ## Features
 
-- 🤖 **AI-Powered Quality Auditor** - Gemini 3 Pro integration for intelligent deviation analysis
+- 🤖 **AI-Powered Quality Auditor** - Configurable AI provider integration for intelligent deviation analysis
 - 🔒 **Intelligent Redaction** - Automatic PII detection and masking for data sovereignty
 - 🌍 **Multi-Lingual Translation** - Technical translation with glossary preservation (English, Deutsch, 日本語)
 - 📄 **PDF/A Export** - IATF-compliant document generation with QR codes
@@ -25,9 +25,15 @@ A **High-Fidelity Enterprise Quality Management System (QMS)** for Webasto Suppl
    npm install
    ```
 
-2. Create `.env.local` file and set your Gemini API key:
+2. Create `.env.local` file and set your AI API key:
    ```
-   GEMINI_API_KEY=your_api_key_here
+   # Use AI_API_KEY for auto-detection, or provider-specific keys:
+   AI_API_KEY=your_api_key_here
+   # Or specify provider explicitly:
+   # AI_PROVIDER=gemini|openai|anthropic
+   # GEMINI_API_KEY=your_key (for Gemini)
+   # OPENAI_API_KEY=your_key (for OpenAI)
+   # ANTHROPIC_API_KEY=your_key (for Anthropic)
    ```
 
 3. Run the development server:
@@ -49,7 +55,7 @@ See the [`docs/`](./docs/) folder for comprehensive documentation:
 - **React 19** + **TypeScript** - Modern frontend framework
 - **Vite** - Fast build tool and dev server
 - **Tailwind CSS** - Utility-first styling
-- **Google Gemini 3 Pro** - AI intelligence layer
+- **AI Provider** - Configurable AI service (supports Gemini, OpenAI, Anthropic, or custom)
 - **jsPDF** - PDF generation
 - **QRCode** - QR code generation
 

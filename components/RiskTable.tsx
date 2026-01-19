@@ -1,27 +1,30 @@
 
-import React from 'react';
-import { RiskItem } from '../types';
+import React, { useState } from 'react';
+import { RiskItem, DeviationRecord } from '../types';
 import { FIELD_DESCRIPTIONS } from '../constants';
+import { AIRecommendations } from './AIRecommendations';
 
 interface RiskTableProps {
   risks: RiskItem[];
   onUpdate: (risks: RiskItem[]) => void;
+  deviation?: DeviationRecord;
 }
 
 const InfoIcon = ({ text }: { text: string }) => (
   <div className="relative group/info inline-block align-middle ml-1.5">
-    <i className="fa-solid fa-circle-info text-[10px] text-slate-300 hover:text-[#007aff] transition-colors cursor-help"></i>
-    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-56 p-4 bg-white rounded-2xl shadow-[0_16px_32px_rgba(0,0,0,0.12)] border border-slate-100 opacity-0 invisible group-hover/info:opacity-100 group-hover/info:visible transition-all z-[100] pointer-events-none text-left">
-      <div className="text-[10px] font-bold text-slate-800 leading-relaxed mb-1 uppercase tracking-widest border-b border-slate-50 pb-2">Information</div>
-      <p className="text-[10px] font-medium text-slate-500 leading-relaxed normal-case">
+    <i className="fa-solid fa-circle-info text-[10px] ui-text-tertiary hover:text-[#007aff] transition-colors cursor-help"></i>
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-56 p-4 glass rounded-2xl shadow-[0_16px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_16px_32px_rgba(0,0,0,0.6)] border border-slate-100 dark:border-slate-700 opacity-0 invisible group-hover/info:opacity-100 group-hover/info:visible transition-all z-[100] pointer-events-none text-left">
+      <div className="text-[10px] font-bold ui-heading leading-relaxed mb-1 uppercase tracking-widest border-b border-slate-100 dark:border-slate-700 pb-2">Information</div>
+      <p className="text-[10px] font-medium ui-text-secondary leading-relaxed normal-case">
         {text}
       </p>
-      <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-white"></div>
+      <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-white dark:border-t-slate-800"></div>
     </div>
   </div>
 );
 
-const RiskTable: React.FC<RiskTableProps> = ({ risks, onUpdate }) => {
+const RiskTable: React.FC<RiskTableProps> = ({ risks, onUpdate, deviation }) => {
+  const [showAIRecommendations, setShowAIRecommendations] = useState<{ source: 'Supplier' | 'Webasto' } | null>(null);
   const addRisk = (source: 'Supplier' | 'Webasto') => {
     const newRisk: RiskItem = {
       id: Math.random().toString(36).substr(2, 9),
@@ -56,96 +59,159 @@ const RiskTable: React.FC<RiskTableProps> = ({ risks, onUpdate }) => {
     const filtered = risks.filter(r => r.source === source);
     return (
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <h4 className="font-semibold text-slate-700">{source} Risks</h4>
-          <button 
-            type="button"
-            onClick={() => addRisk(source)}
-            className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded flex items-center gap-1 border border-slate-300 transition-colors"
-          >
-            <i className="fa-solid fa-plus"></i> Add Risk
-          </button>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-sm font-bold ui-heading">{source} Risks</h4>
+          <div className="flex items-center gap-2">
+            <button 
+              type="button"
+              onClick={() => setShowAIRecommendations({ source })}
+              className="ai-recommend-btn"
+              disabled={!deviation}
+            >
+              <i className="fa-solid fa-sparkles"></i>
+              <span className="hidden sm:inline">I A:M Q</span>
+            </button>
+            <button 
+              type="button"
+              onClick={() => addRisk(source)}
+              className="add-btn"
+            >
+              <i className="fa-solid fa-plus"></i>
+              <span className="hidden sm:inline">Add Risk</span>
+            </button>
+          </div>
         </div>
-        <div className="overflow-x-auto border border-slate-200 rounded-lg">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
-              <tr>
-                <th className="px-3 py-2">Description</th>
-                <th className="px-3 py-2 w-16 text-center">S</th>
-                <th className="px-3 py-2 w-16 text-center">O</th>
-                <th className="px-3 py-2 w-16 text-center">D</th>
-                <th className="px-3 py-2 w-24 text-center">
-                  RPN <InfoIcon text={FIELD_DESCRIPTIONS.rpn} />
-                </th>
-                <th className="px-3 py-2 w-10"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-3 py-4 text-center text-slate-400 italic">No risks identified.</td>
+        <div className="glass rounded-[24px] overflow-hidden">
+          <div className="overflow-x-auto no-scrollbar">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-white/20 dark:border-white/10">
+                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest ui-label">Description</th>
+                  <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest ui-label w-20 text-center">S</th>
+                  <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest ui-label w-20 text-center">O</th>
+                  <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest ui-label w-20 text-center">D</th>
+                  <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest ui-label w-24 text-center">
+                    RPN <InfoIcon text={FIELD_DESCRIPTIONS.rpn} />
+                  </th>
+                  <th className="px-4 py-4 w-12"></th>
                 </tr>
-              ) : filtered.map(risk => (
-                <tr key={risk.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
-                  <td className="px-3 py-2">
-                    <input 
-                      type="text" 
-                      value={risk.description}
-                      onChange={(e) => updateItem(risk.id, 'description', e.target.value)}
-                      placeholder="Identify specific risk..."
-                      className="w-full bg-transparent border-none focus:ring-1 focus:ring-webasto-blue rounded px-1 py-0.5 text-slate-700"
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <input 
-                      type="number" min="1" max="10"
-                      value={risk.severity}
-                      onChange={(e) => updateItem(risk.id, 'severity', parseInt(e.target.value))}
-                      className="w-12 text-center border-none bg-slate-100 rounded focus:ring-1 focus:ring-webasto-blue"
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <input 
-                      type="number" min="1" max="10"
-                      value={risk.occurrence}
-                      onChange={(e) => updateItem(risk.id, 'occurrence', parseInt(e.target.value))}
-                      className="w-12 text-center border-none bg-slate-100 rounded focus:ring-1 focus:ring-webasto-blue"
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <input 
-                      type="number" min="1" max="10"
-                      value={risk.detection}
-                      onChange={(e) => updateItem(risk.id, 'detection', parseInt(e.target.value))}
-                      className="w-12 text-center border-none bg-slate-100 rounded focus:ring-1 focus:ring-webasto-blue"
-                    />
-                  </td>
-                  <td className={`px-3 py-2 text-center font-bold ${risk.rpn > 100 ? 'text-red-600' : 'text-slate-600'}`}>
-                    {risk.rpn}
-                  </td>
-                  <td className="px-3 py-2 text-center">
-                    <button onClick={() => removeRisk(risk.id)} className="text-slate-300 hover:text-red-500 transition-colors">
-                      <i className="fa-solid fa-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-white/10 dark:divide-white/5">
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-8 text-center ui-text-tertiary italic text-sm">No risks identified.</td>
+                  </tr>
+                ) : filtered.map(risk => (
+                  <tr key={risk.id} className="hover:bg-white/5 dark:hover:bg-white/5 transition-colors group">
+                    <td className="px-6 py-3">
+                      <input 
+                        type="text" 
+                        value={risk.description}
+                        onChange={(e) => updateItem(risk.id, 'description', e.target.value)}
+                        placeholder="Identify specific risk..."
+                        className="w-full apple-input bg-transparent border-none focus:ring-0 px-2 py-1 text-sm"
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <input 
+                        type="number" min="1" max="10"
+                        value={risk.severity}
+                        onChange={(e) => updateItem(risk.id, 'severity', parseInt(e.target.value))}
+                        className="w-20 apple-input text-center text-sm font-bold ui-text-primary"
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <input 
+                        type="number" min="1" max="10"
+                        value={risk.occurrence}
+                        onChange={(e) => updateItem(risk.id, 'occurrence', parseInt(e.target.value))}
+                        className="w-20 apple-input text-center text-sm font-bold ui-text-primary"
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <input 
+                        type="number" min="1" max="10"
+                        value={risk.detection}
+                        onChange={(e) => updateItem(risk.id, 'detection', parseInt(e.target.value))}
+                        className="w-20 apple-input text-center text-sm font-bold ui-text-primary"
+                      />
+                    </td>
+                    <td className={`px-4 py-3 text-center font-extrabold text-base ${risk.rpn >= 125 ? 'text-red-500 dark:text-red-400' : 'ui-text-primary'}`}>
+                      {risk.rpn}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <button 
+                        onClick={() => removeRisk(risk.id)} 
+                        className="ui-icon-btn w-8 h-8 flex items-center justify-center text-red-400 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400 transition-colors"
+                      >
+                        <i className="fa-solid fa-trash text-xs"></i>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     );
   };
 
+  const handleAIRecommendationsSelect = (items: any[]) => {
+    onUpdate([...risks, ...(items as RiskItem[])]);
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-500 mb-4">
-        <i className="fa-solid fa-circle-info mr-2"></i>
-        FMEA Scoring: <strong>S</strong>everity, <strong>O</strong>ccurrence, <strong>D</strong>etection (1-10). <strong>RPN</strong> = S x O x D.
+    <>
+      <div className="space-y-6">
+        {renderSection('Supplier')}
+        {renderSection('Webasto')}
+        <div className="glass glass-highlight p-6 rounded-[24px] mt-6">
+          <div className="flex items-center gap-4">
+            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#007aff] to-[#60a5fa] dark:from-[#60a5fa] dark:to-[#007aff] flex items-center justify-center shadow-lg shadow-[#007aff]/20">
+              <i className="fa-solid fa-circle-info text-white text-lg"></i>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h5 className="text-xs font-black ui-heading uppercase tracking-wider mb-2">FMEA Scoring Guide</h5>
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs ui-text-secondary">
+                <span className="flex items-center gap-1.5">
+                  <strong className="ui-text-primary font-bold text-sm">S</strong>
+                  <span className="text-[10px] ui-text-tertiary">= Severity</span>
+                </span>
+                <span className="text-[10px] ui-text-tertiary">•</span>
+                <span className="flex items-center gap-1.5">
+                  <strong className="ui-text-primary font-bold text-sm">O</strong>
+                  <span className="text-[10px] ui-text-tertiary">= Occurrence</span>
+                </span>
+                <span className="text-[10px] ui-text-tertiary">•</span>
+                <span className="flex items-center gap-1.5">
+                  <strong className="ui-text-primary font-bold text-sm">D</strong>
+                  <span className="text-[10px] ui-text-tertiary">= Detection</span>
+                </span>
+                <span className="text-[10px] ui-text-tertiary ml-1">(Scale: 1-10)</span>
+              </div>
+              <div className="mt-3 pt-3 border-t border-white/10 dark:border-white/5">
+                <p className="text-xs ui-text-secondary">
+                  <strong className="ui-text-primary font-bold">RPN</strong> (Risk Priority Number) = <strong className="ui-text-primary">S</strong> × <strong className="ui-text-primary">O</strong> × <strong className="ui-text-primary">D</strong>
+                  <span className="ml-2 px-2 py-0.5 rounded bg-red-500/10 dark:bg-red-500/20 text-red-600 dark:text-red-400 text-[10px] font-bold">
+                    Critical: RPN ≥ 125
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      {renderSection('Supplier')}
-      {renderSection('Webasto')}
-    </div>
+      {showAIRecommendations && deviation && (
+        <AIRecommendations
+          type="risk"
+          deviation={deviation}
+          source={showAIRecommendations.source}
+          onSelect={handleAIRecommendationsSelect}
+          onClose={() => setShowAIRecommendations(null)}
+        />
+      )}
+    </>
   );
 };
 

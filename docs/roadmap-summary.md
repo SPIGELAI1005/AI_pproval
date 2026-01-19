@@ -94,9 +94,9 @@ Transform Webasto SDA into a **World-Class Intelligent Quality Operating System*
 ## Technical Stack Additions
 
 ### New AI Capabilities
-- **Gemini 2.5 Flash Image**: Vision-based verification
-- **Gemini Live API**: Voice-to-text conversion
-- **Enhanced Gemini 3 Pro**: Multi-lingual translation, similarity detection
+- **Vision-based AI**: Vision-based verification (supports multiple providers)
+- **Voice AI API**: Voice-to-text conversion (supports multiple providers)
+- **AI Providers**: Multi-lingual translation, similarity detection (configurable)
 
 ### New Integrations
 - **SAP OData/RFC**: Bi-directional ERP sync

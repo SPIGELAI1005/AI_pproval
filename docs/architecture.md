@@ -111,9 +111,9 @@ Dynamic routing logic determines required approvers based on:
 
 ### 3.1 AI Integration
 
-**Service**: `services/geminiService.ts`  
-**Model**: Google Gemini 3 Pro Preview  
-**API**: `@google/genai` package
+**Service**: `services/aiService.ts`  
+**Provider**: Configurable (supports Gemini, OpenAI, Anthropic, or custom)  
+**API**: Provider-agnostic with auto-detection based on API key format
 
 ### 3.2 Virtual Quality Auditor Role
 
@@ -189,7 +189,7 @@ D_AI_pproval/
 │   ├── AnalyticsCharts.tsx # Performance charts
 │   └── ActivityFeed.tsx   # Activity stream
 └── services/
-    └── geminiService.ts   # Gemini AI integration
+    └── aiService.ts       # Provider-agnostic AI integration
 ```
 
 ### 4.2 Key Files
@@ -361,7 +361,9 @@ D_AI_pproval/
 ### 6.4 Environment Setup
 
 **Required Environment Variables:**
-- `GEMINI_API_KEY`: Google Gemini API key for AI features
+- `AI_API_KEY`: AI provider API key (auto-detects provider from key format)
+- `AI_PROVIDER`: Optional - explicitly set provider (`gemini`, `openai`, `anthropic`)
+- Provider-specific keys also supported: `GEMINI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`
 
 **Configuration:**
 - Port: 3000 (configurable in `vite.config.ts`)
@@ -410,7 +412,7 @@ D_AI_pproval/
 - **IATF 16949**: Automotive Quality Management System Standard
 - **FMEA**: Failure Mode and Effects Analysis methodology
 - **Webasto Corporate Standards**: Internal approval matrix and routing policies
-- **Gemini API**: [Google AI Studio](https://ai.studio)
+- **AI Providers**: Supports multiple providers based on API key configuration
 
 ---
 

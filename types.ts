@@ -114,6 +114,7 @@ export interface DeviationRecord {
     customerContact?: string;
     customerReleaseNecessary: boolean;
     productSafetyRelevant: boolean;
+    productSafetyComment?: string;
     attachments: Attachment[];
     slackSync?: boolean;
     teamsSync?: boolean;

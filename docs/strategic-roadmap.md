@@ -22,10 +22,10 @@ Transform the Webasto SDA platform from a **document management tool** into a **
 ## 1. Vision-Based Deviation Verification
 
 ### Overview
-Integrate **Gemini 2.5 Flash Image** to allow users to upload photos of physical deviations. AI compares images against technical drawings (CAD/PDF) to automatically identify non-conformities and suggest RPN severity.
+Integrate **Vision-based AI** to allow users to upload photos of physical deviations. AI compares images against technical drawings (CAD/PDF) to automatically identify non-conformities and suggest RPN severity.
 
 ### Technical Requirements
-- **API**: Gemini 2.5 Flash with vision capabilities
+- **API**: AI provider with vision capabilities (e.g., GPT-4 Vision, Claude 3.5 Sonnet, Gemini Vision)
 - **File Handling**: Image upload (JPEG, PNG, HEIC) + PDF/CAD parsing
 - **Storage**: Secure image storage with CDN for fast access
 - **Processing**: Image preprocessing (resize, optimize) before AI analysis
@@ -40,7 +40,7 @@ export class VisionService {
     deviationContext: DeviationRecord
   ): Promise<VisionAnalysis> {
     // 1. Upload images to secure storage
-    // 2. Send to Gemini 2.5 Flash with vision prompt
+    // 2. Send to AI provider with vision capabilities
     // 3. Compare physical deviation vs. technical spec
     // 4. Return structured analysis with RPN suggestions
   }
@@ -65,10 +65,10 @@ export class VisionService {
 ## 2. Live "Quality Voice" Assistant
 
 ### Overview
-Implement **Gemini Live API** to enable Quality Engineers on the shop floor to initiate SDA drafts via voice. Hands-free operation while inspecting parts, with real-time conversion of spoken technical descriptions into structured form data.
+Implement **Voice AI API** to enable Quality Engineers on the shop floor to initiate SDA drafts via voice. Hands-free operation while inspecting parts, with real-time conversion of spoken technical descriptions into structured form data.
 
 ### Technical Requirements
-- **API**: Gemini Live API (streaming voice-to-text)
+- **API**: AI provider with voice/audio capabilities (e.g., OpenAI Whisper, Anthropic Audio, Gemini Live)
 - **Audio Processing**: Web Audio API, noise cancellation
 - **Real-time**: WebSocket connection for streaming responses
 - **Offline Support**: Queue voice commands when offline, sync when reconnected
@@ -80,16 +80,16 @@ export class VoiceService {
   private mediaRecorder: MediaRecorder | null = null;
   
   async startVoiceInput(): Promise<void> {
-    // Initialize Gemini Live API connection
+    // Initialize Voice AI API connection
     // Start audio stream from microphone
-    // Stream to Gemini with context about current form state
+    // Stream to AI provider with context about current form state
   }
   
   async processVoiceCommand(
     audioBlob: Blob,
     currentFormState: Partial<DeviationRecord>
   ): Promise<StructuredFormData> {
-    // Send audio to Gemini Live
+    // Send audio to AI provider
     // Receive structured JSON response
     // Map to form fields
   }
@@ -227,10 +227,10 @@ export class CAPAService {
 ## 5. Multi-Lingual Technical Translation
 
 ### Overview
-Using Gemini's high-context window, implement a **Technical Translation Engine**. A deviation entered in German by a shop floor worker in Arad can be instantly translated for a Global Quality Lead in Japan, maintaining technical nuances.
+Using AI with high-context window capabilities, implement a **Technical Translation Engine**. A deviation entered in German by a shop floor worker in Arad can be instantly translated for a Global Quality Lead in Japan, maintaining technical nuances.
 
 ### Technical Requirements
-- **API**: Gemini with translation capabilities
+- **API**: AI provider with translation capabilities (supports all configured providers)
 - **Context Window**: Large context for technical terminology
 - **Terminology Database**: Webasto-specific technical terms glossary
 - **Real-time**: Instant translation as user types
@@ -246,7 +246,7 @@ export class TranslationService {
     targetLanguage: 'English' | 'Deutsch' | '日本語'
   ): Promise<DeviationRecord> {
     // 1. Load technical glossary for source/target languages
-    // 2. Send to Gemini with glossary context
+    // 2. Send to AI provider with glossary context
     // 3. Maintain technical accuracy
     // 4. Return translated deviation
   }
@@ -276,56 +276,66 @@ export class TranslationService {
 
 ---
 
-## 6. Predictive Approval Timelines
+## 6. Predictive Approval Timelines ✅ **COMPLETED**
 
 ### Overview
 Use historical data to predict "Expected Approval Date." If a specific R&D Director in a specific BU is a known bottleneck, AI flags it early and suggests alternative delegates to prevent supply chain delays.
 
 ### Technical Requirements
-- **ML Model**: Historical approval time analysis
-- **Data Source**: Past approval timestamps, approver patterns
-- **Real-time**: Dynamic prediction updates
-- **Notifications**: Proactive alerts for at-risk approvals
+- **ML Model**: Historical approval time analysis ✅
+- **Data Source**: Past approval timestamps, approver patterns ✅
+- **Real-time**: Dynamic prediction updates ✅
+- **Notifications**: Proactive alerts for at-risk approvals ✅
 
 ### Implementation Details
 ```typescript
-// New service: services/predictionService.ts
+// ✅ IMPLEMENTED: services/predictionService.ts
 export class PredictionService {
   async predictApprovalTimeline(
     deviation: DeviationRecord
   ): Promise<ApprovalPrediction> {
-    // 1. Analyze historical approvals for similar deviations
-    // 2. Consider approver workload and patterns
-    // 3. Factor in BU, duration, urgency
-    // 4. Return predicted dates with confidence scores
+    // ✅ Analyzes historical approvals for similar deviations
+    // ✅ Considers approver workload and patterns
+    // ✅ Factors in BU, duration, urgency
+    // ✅ Returns predicted dates with confidence scores
   }
   
   async identifyBottlenecks(
     bu: BU,
     role: string
   ): Promise<BottleneckAnalysis> {
-    // Identify slow approvers
-    // Suggest delegates
+    // ✅ Identifies slow approvers
+    // ✅ Suggests delegates
   }
 }
 ```
 
-### UI Changes
-- Timeline visualization with predicted dates
-- Bottleneck warnings with delegate suggestions
-- Risk indicators for delayed approvals
-- Historical performance metrics per approver
+### UI Changes ✅ **IMPLEMENTED**
+- ✅ Timeline visualization with predicted dates (`components/ApprovalTimeline.tsx`)
+- ✅ Bottleneck warnings with delegate suggestions
+- ✅ Risk indicators for delayed approvals
+- ✅ Historical performance metrics per approver
+- ✅ Compact view in New Deviation header
+- ✅ Full view in Approvals tab
 
 ### Business Value
 - **Supply Chain**: Prevents production delays through early intervention
 - **Visibility**: Stakeholders see expected approval dates upfront
 - **Optimization**: Identifies and resolves approval bottlenecks
 
-### Priority: **Phase 2** (Strategic Value)
+### Priority: **Phase 2** (Strategic Value) ✅ **COMPLETED**
+
+### Implementation Status
+- ✅ `PredictionService` implemented with mock historical data
+- ✅ `ApprovalTimeline` component with compact and full views
+- ✅ Integrated into New Deviation header (compact) and Approvals tab (full)
+- ✅ Bottleneck detection with severity levels (warning/critical)
+- ✅ Delegate suggestions for high-workload approvers
+- ✅ Confidence scoring based on historical data volume
 
 ---
 
-## 7. Interactive Adaptive Cards (Slack/Teams)
+## 7. Interactive Adaptive Cards (Slack/Teams) ✅ **COMPLETED**
 
 ### Overview
 Send **Interactive Adaptive Cards** to Microsoft Teams where executives can see the summary and click "Approve" or "Reject" directly from the chat interface without opening the app.
@@ -375,7 +385,15 @@ export class AdaptiveCardsService {
 - **Convenience**: No app switching required
 - **Engagement**: Executives more likely to respond quickly
 
-### Priority: **Phase 2** (High User Satisfaction)
+### Priority: **Phase 2** (High User Satisfaction) ✅ **COMPLETED**
+
+### Implementation Status
+- ✅ `AdaptiveCardsService` implemented with Teams Adaptive Cards and Slack Block Kit support
+- ✅ `AdaptiveCardPreview` component for previewing and sending cards
+- ✅ Integrated into Approvals tab - shows cards for pending approval steps
+- ✅ Platform selection (Teams/Slack) with visual preview
+- ✅ Card generation includes deviation summary, RPN, urgency indicators
+- ✅ Mock API integration ready for production Teams/Slack API integration
 
 ---
 
@@ -505,8 +523,8 @@ If a user is drafting an SDA for a material that was previously rejected for the
 
 ### Implementation Details
 ```typescript
-// Enhanced service: services/geminiService.ts
-export class GeminiService {
+// Enhanced service: services/aiService.ts
+export class AIService {
   async checkSimilarityConflicts(
     deviation: Partial<DeviationRecord>
   ): Promise<ConflictAlert[]> {
@@ -817,12 +835,12 @@ export class RedactionService {
 7. ✅ **Vision-Based Verification** (High Impact)
 
 ### Phase 2 (Months 4-6) - Automation
-8. ✅ **Voice Assistant** (Productivity)
+8. ⏳ **Voice Assistant** (Productivity)
 9. ✅ **8D/CAPA Mapping** (Quality Process)
-10. ✅ **Predictive Timelines** (Strategic)
-11. ✅ **Adaptive Cards** (User Experience)
-12. ✅ **Advanced Analytics** (Strategic)
-13. ✅ **Offline PWA** (User Value)
+10. ✅ **Predictive Timelines** (Strategic) - **COMPLETED**
+11. ✅ **Adaptive Cards** (User Experience) - **COMPLETED**
+12. ⏳ **Advanced Analytics** (Strategic)
+13. ⏳ **Offline PWA** (User Value)
 
 ### Phase 3 (Months 7-9) - Scale
 14. ✅ **Supplier Portal** (Strategic Enhancement)
@@ -835,8 +853,8 @@ export class RedactionService {
 ### New Services Required
 ```
 services/
-├── visionService.ts          # Gemini 2.5 Flash Image
-├── voiceService.ts           # Gemini Live API
+├── visionService.ts          # Vision-based AI (provider-agnostic)
+├── voiceService.ts           # Voice AI API (provider-agnostic)
 ├── sapSyncService.ts         # Bi-directional SAP
 ├── capaService.ts            # 8D/CAPA mapping
 ├── translationService.ts     # Multi-lingual

@@ -8,7 +8,7 @@ Welcome to the architectural documentation for the **Webasto Supplier Deviation 
 Comprehensive guide covering:
 - Core purpose & domain (SDA workflow, IATF compliance, FMEA logic)
 - Tech stack & design system (React, TypeScript, Tailwind, glassmorphism)
-- Intelligence layer (AI:PPROVAL with Gemini 3 Pro)
+- Intelligence layer (AI:PPROVAL with configurable AI providers)
 - Codebase organization (file structure, key components)
 - Key business logic (approval routing, RPN calculation)
 - Development guidelines

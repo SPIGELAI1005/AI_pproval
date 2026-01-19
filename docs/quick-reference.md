@@ -6,8 +6,9 @@
 # Install dependencies
 npm install
 
-# Create .env.local with your Gemini API key
-echo "GEMINI_API_KEY=your_key_here" > .env.local
+# Create .env.local with your AI API key
+echo "AI_API_KEY=your_key_here" > .env.local
+# Or use provider-specific keys: GEMINI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY
 
 # Start development server
 npm run dev
@@ -31,7 +32,7 @@ npm run preview
 | `types.ts` | **Source of Truth** - All domain models |
 | `constants.tsx` | Master data (Plants, BUs, Triggers), tooltips |
 | `components/Layout.tsx` | Navigation sidebar and header |
-| `services/geminiService.ts` | AI integration with Gemini 3 Pro |
+| `services/aiService.ts` | AI integration (supports multiple providers) |
 | `components/RiskTable.tsx` | FMEA risk management (S/O/D inputs) |
 | `components/ActionTable.tsx` | Corrective action tracking |
 
@@ -204,8 +205,9 @@ Before sending to AI, redact PII:
 ## Troubleshooting
 
 ### AI Not Working
-- Check `GEMINI_API_KEY` in `.env.local`
-- Verify API key is valid
+- Check `AI_API_KEY` (or provider-specific key) in `.env.local`
+- Verify API key is valid for your chosen provider
+- Set `AI_PROVIDER` environment variable if auto-detection fails
 - Check browser console for errors
 - Ensure redaction mode is configured correctly
 

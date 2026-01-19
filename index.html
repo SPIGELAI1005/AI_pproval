@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="en" style="color-scheme: light;">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,43 +8,115 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
       
       :root {
         --webasto-blue: #00305d;
         --apple-blue: #007aff;
       }
 
+      /* Light Mode */
+      :root, :root.light {
+        --bg-primary: #f8fafc;
+        --bg-secondary: #f1f5f9;
+        /* Increase contrast: slightly less transparent glass so text doesn't wash out */
+        --bg-glass: rgba(255, 255, 255, 0.90);
+        --bg-glass-hover: rgba(255, 255, 255, 0.96);
+        --bg-glass-dark: rgba(15, 23, 42, 0.85);
+        /* Use a subtle dark border (not white-on-white) to define edges */
+        --border-glass: rgba(15, 23, 42, 0.08);
+        --border-glass-dark: rgba(255, 255, 255, 0.15);
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-tertiary: #64748b;
+        --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.08);
+        --shadow-glass-hover: 0 12px 48px rgba(0, 0, 0, 0.12);
+        --gradient-bg: radial-gradient(at 0% 0%, hsla(210,100%,95%,1) 0, transparent 50%), 
+                       radial-gradient(at 50% 0%, hsla(225,39%,90%,1) 0, transparent 50%), 
+                       radial-gradient(at 100% 0%, hsla(339,49%,90%,1) 0, transparent 50%);
+      }
+
+      /* Dark Mode */
+      :root.dark {
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --bg-glass: rgba(30, 41, 59, 0.8);
+        --bg-glass-hover: rgba(30, 41, 59, 0.9);
+        --bg-glass-dark: rgba(15, 23, 42, 0.95);
+        --border-glass: rgba(255, 255, 255, 0.1);
+        --border-glass-dark: rgba(255, 255, 255, 0.05);
+        --text-primary: #ffffff;
+        --text-secondary: #e2e8f0;
+        --text-tertiary: #cbd5e1;
+        --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.4);
+        --shadow-glass-hover: 0 12px 48px rgba(0, 0, 0, 0.6);
+        --gradient-bg: radial-gradient(at 0% 0%, hsla(210,50%,15%,1) 0, transparent 50%), 
+                       radial-gradient(at 50% 0%, hsla(225,40%,20%,1) 0, transparent 50%), 
+                       radial-gradient(at 100% 0%, hsla(339,40%,20%,1) 0, transparent 50%);
+      }
+
+      * {
+        transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+      }
+
       body { 
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
-        background: radial-gradient(at 0% 0%, hsla(210,100%,95%,1) 0, transparent 50%), 
-                    radial-gradient(at 50% 0%, hsla(225,39%,90%,1) 0, transparent 50%), 
-                    radial-gradient(at 100% 0%, hsla(339,49%,90%,1) 0, transparent 50%);
+        background: var(--gradient-bg);
         background-attachment: fixed;
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
         min-height: 100vh;
       }
 
+      /* Enhanced Glass Effects */
       .glass {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.4);
+        background: var(--bg-glass);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border: 1px solid var(--border-glass);
+        box-shadow: var(--shadow-glass);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .glass:hover {
+        background: var(--bg-glass-hover);
+        box-shadow: var(--shadow-glass-hover);
+        transform: translateY(-2px);
+        border-color: rgba(255, 255, 255, 0.6);
       }
 
       .glass-dark {
-        background: rgba(15, 23, 42, 0.8);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: var(--bg-glass-dark);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border: 1px solid var(--border-glass-dark);
+        box-shadow: var(--shadow-glass);
       }
 
-      /* Apple-like Segmented Control */
-      .segmented-control {
-        background: rgba(0, 0, 0, 0.05);
-        padding: 4px;
-        border-radius: 12px;
+      /* Glass Highlight Effect */
+      .glass-highlight {
+        position: relative;
+        overflow: hidden;
       }
 
+      .glass-highlight::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+        opacity: 0;
+        transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+      }
+
+      .glass-highlight:hover::before {
+        opacity: 1;
+      }
+
+      /* Spotlight Effect */
       .spotlight {
         position: relative;
         overflow: hidden;
@@ -54,23 +126,118 @@
         content: '';
         position: absolute;
         inset: 0;
-        background: radial-gradient(circle at var(--x) var(--y), rgba(255,255,255,0.4) 0%, transparent 80%);
+        background: radial-gradient(circle 300px at var(--x) var(--y), 
+          rgba(255, 255, 255, 0.15) 0%, 
+          rgba(255, 255, 255, 0.05) 40%,
+          transparent 80%);
         opacity: 0;
-        transition: opacity 0.3s;
+        transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         pointer-events: none;
+        z-index: 1;
       }
 
       .spotlight:hover::before {
         opacity: 1;
       }
 
+      .dark .spotlight::before {
+        background: radial-gradient(circle 300px at var(--x) var(--y), 
+          rgba(255, 255, 255, 0.08) 0%, 
+          rgba(255, 255, 255, 0.03) 40%,
+          transparent 80%);
+      }
+
+      /* Apple-like Segmented Control */
+      .segmented-control {
+        background: rgba(255, 255, 255, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.55);
+        padding: 6px;
+        border-radius: 16px;
+        backdrop-filter: blur(18px) saturate(160%);
+        -webkit-backdrop-filter: blur(18px) saturate(160%);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.65),
+          0 8px 24px rgba(0, 0, 0, 0.08);
+      }
+
+      .dark .segmented-control {
+        background: rgba(15, 23, 42, 0.35);
+        border-color: rgba(255, 255, 255, 0.08);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.08),
+          0 10px 28px rgba(0, 0, 0, 0.5);
+      }
+
+      /* Smooth Animations */
       @keyframes slideIn {
         from { transform: translateY(20px); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
       }
 
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      @keyframes scaleIn {
+        from { transform: scale(0.95); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+
       .animate-slide-in {
         animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      .animate-fade-in {
+        animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
+
+      .animate-scale-in {
+        animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
+
+      /* Enhanced Hover Effects */
+      .hover-lift {
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .hover-lift:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-glass-hover);
+      }
+
+      .hover-glow {
+        transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .hover-glow:hover {
+        box-shadow: 0 0 20px rgba(0, 122, 255, 0.3);
+      }
+
+      /* Smooth Scroll */
+      * {
+        scroll-behavior: smooth;
+      }
+
+      /* Selection */
+      ::selection {
+        background: rgba(0, 122, 255, 0.2);
+        color: var(--text-primary);
+      }
+
+      .dark ::selection {
+        background: rgba(0, 122, 255, 0.3);
+      }
+
+      /* Global Select/Dropdown Fix - Remove all native arrows */
+      select {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+      }
+      select::-ms-expand {
+        display: none;
       }
     </style>
 <script type="importmap">
@@ -85,7 +252,7 @@
 </script>
 <link rel="stylesheet" href="/index.css">
 </head>
-<body class="text-slate-900 overflow-hidden">
+<body class="overflow-x-hidden">
     <div id="root"></div>
     <script>
       // Global mouse move listener for spotlight effect

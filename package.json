@@ -11,9 +11,11 @@
   "dependencies": {
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "@google/genai": "^1.35.0",
     "jspdf": "^2.5.1",
     "qrcode": "^1.5.3"
+  },
+  "optionalDependencies": {
+    "@google/genai": "^1.35.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
