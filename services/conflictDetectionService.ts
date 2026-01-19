@@ -29,11 +29,20 @@ export interface ConflictCheckResult {
 }
 
 export class ConflictDetectionService {
-  private aiService: AIService;
+  private aiService: AIService | null;
   private historicalDeviations: DeviationRecord[] = [];
 
   constructor() {
-    this.aiService = new AIService();
+    try {
+      this.aiService = new AIService();
+      if (!this.aiService.available) {
+        this.aiService = null;
+        console.warn('ConflictDetectionService: AI service unavailable, conflict detection will be limited');
+      }
+    } catch (error) {
+      this.aiService = null;
+      console.warn('ConflictDetectionService: Failed to initialize AI service, conflict detection will be limited', error);
+    }
     // In production, this would fetch from a database/API
     this.loadHistoricalDeviations();
   }
@@ -230,6 +239,21 @@ export class ConflictDetectionService {
     current: Partial<DeviationRecord>,
     historical: DeviationRecord
   ): Promise<number> {
+    // If AI service is not available, use basic string matching
+    if (!this.aiService || !this.aiService.available) {
+      // Fallback: simple string similarity based on key fields
+      const currentKey = `${current.masterData?.materialNo || ''} ${current.details?.deviation || ''}`.toLowerCase();
+      const historicalKey = `${historical.masterData.materialNo} ${historical.details.deviation}`.toLowerCase();
+      
+      // Simple word overlap calculation
+      const currentWords = new Set(currentKey.split(/\s+/));
+      const historicalWords = new Set(historicalKey.split(/\s+/));
+      const intersection = new Set([...currentWords].filter(x => historicalWords.has(x)));
+      const union = new Set([...currentWords, ...historicalWords]);
+      
+      return intersection.size / union.size;
+    }
+
     // Extract key fields for comparison
     const currentKey = {
       materialNo: current.masterData?.materialNo || '',

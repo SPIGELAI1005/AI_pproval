@@ -25,7 +25,7 @@ A **High-Fidelity Enterprise Quality Management System (QMS)** for Webasto Suppl
    npm install
    ```
 
-2. Create `.env.local` file and set your AI API key:
+2. Create `.env.local` file and set your AI API key (optional - app works without it):
    ```
    # Use AI_API_KEY for auto-detection, or provider-specific keys:
    AI_API_KEY=your_api_key_here
@@ -35,6 +35,8 @@ A **High-Fidelity Enterprise Quality Management System (QMS)** for Webasto Suppl
    # OPENAI_API_KEY=your_key (for OpenAI)
    # ANTHROPIC_API_KEY=your_key (for Anthropic)
    ```
+   
+   **Note:** The app will work without an API key, but AI features (analysis, voice, translation) will be disabled.
 
 3. Run the development server:
    ```bash
@@ -43,12 +45,22 @@ A **High-Fidelity Enterprise Quality Management System (QMS)** for Webasto Suppl
 
 4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
+## Deploy to Vercel
+
+See [docs/vercel-deployment.md](./docs/vercel-deployment.md) for detailed deployment instructions.
+
+Quick steps:
+1. Connect your GitHub repo to Vercel
+2. Add `AI_API_KEY` environment variable in Vercel project settings
+3. Deploy!
+
 ## Documentation
 
 See the [`docs/`](./docs/) folder for comprehensive documentation:
 - [Architecture Documentation](./docs/architecture.md) - System architecture and design
 - [Quick Reference Guide](./docs/quick-reference.md) - Developer quick reference
 - [Strategic Roadmap](./docs/strategic-roadmap.md) - Future enhancements and roadmap
+- [Vercel Deployment Guide](./docs/vercel-deployment.md) - Deployment instructions
 
 ## Tech Stack
 

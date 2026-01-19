@@ -56,7 +56,7 @@ export default function GlobalAIPanel({
       />
 
       {/* Panel */}
-      <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[600px] lg:w-[700px] z-50 frosted-panel glass-highlight flex flex-col">
+      <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[600px] lg:w-[700px] z-50 frosted-panel flex flex-col">
         {/* Header */}
         <div className="p-6 border-b border-white/40 dark:border-white/10 bg-gradient-to-tr from-emerald-500/10 via-emerald-500/5 to-transparent dark:from-emerald-500/15 dark:via-emerald-500/8 dark:to-transparent shrink-0">
           <div className="flex items-center justify-between mb-4">

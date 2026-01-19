@@ -22,19 +22,22 @@ export class TranslationService {
 
   constructor() {
     // Get API key from environment (supports multiple providers)
-    this.apiKey = process.env.AI_API_KEY || 
-                  process.env.API_KEY || 
-                  process.env.GEMINI_API_KEY || 
-                  process.env.OPENAI_API_KEY ||
-                  process.env.ANTHROPIC_API_KEY ||
+    this.apiKey = (typeof process !== 'undefined' && process.env?.AI_API_KEY) ||
+                  (typeof process !== 'undefined' && process.env?.API_KEY) ||
+                  (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) ||
+                  (typeof process !== 'undefined' && process.env?.OPENAI_API_KEY) ||
+                  (typeof process !== 'undefined' && process.env?.ANTHROPIC_API_KEY) ||
                   '';
     
     if (!this.apiKey) {
-      throw new Error('AI API key is required for translation. Set AI_API_KEY or provider-specific key in environment variables.');
+      console.warn('TranslationService: AI API key not found. Translation features will be disabled.');
+      this.provider = 'none';
+      this.technicalGlossary = this.initializeGlossary();
+      return;
     }
 
     // Detect provider
-    this.provider = process.env.AI_PROVIDER || this.detectProvider(this.apiKey);
+    this.provider = (typeof process !== 'undefined' && process.env?.AI_PROVIDER) || this.detectProvider(this.apiKey);
     this.technicalGlossary = this.initializeGlossary();
   }
 
@@ -160,6 +163,11 @@ export class TranslationService {
         technicalTermsPreserved: [],
         untranslatableTerms: [],
       };
+    }
+
+    // Check if API key is available
+    if (!this.apiKey || this.provider === 'none') {
+      throw new Error('Translation service is not available. Please configure an AI API key in environment variables.');
     }
 
     // Build glossary context for AI

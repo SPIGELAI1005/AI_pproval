@@ -176,6 +176,9 @@ Return ONLY valid JSON, no other text.`;
         timestamp: new Date().toISOString(),
       };
 
+      if (!this.aiService || !this.aiService.available) {
+        throw new Error('AI service is not available. Please configure an AI API key to use voice features.');
+      }
       const response = await this.aiService.analyzeDeviation(mockDeviation, false);
 
       // Parse structured data from AI response

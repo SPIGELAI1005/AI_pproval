@@ -9,32 +9,39 @@
   animation: none !important;
 }
 
-/* Frozen glass panel (for the I A:M Q chat drawer) */
+/* Frozen glass panel (for the I A:M Q chat drawer) - More transparent, no hover effects */
 .frosted-panel {
-  background: rgba(255, 255, 255, 0.62);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border: 1px solid rgba(15, 23, 42, 0.10);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
+  background: rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(32px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(200%) !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15) !important;
+  transition: none !important;
 }
 .dark .frosted-panel {
-  background: rgba(15, 23, 42, 0.62);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.55);
+  background: rgba(15, 23, 42, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.50) !important;
 }
 
-/* Reduce hover/mouse-over effects on the panel */
-.frosted-panel:hover {
+/* Completely disable hover effects on the panel */
+.frosted-panel:hover,
+.frosted-panel:hover::before,
+.frosted-panel:hover::after {
   transform: none !important;
-  background: rgba(255, 255, 255, 0.66);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
-  border-color: rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.45) !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15) !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+  opacity: 1 !important;
 }
-.dark .frosted-panel:hover {
+.dark .frosted-panel:hover,
+.dark .frosted-panel:hover::before,
+.dark .frosted-panel:hover::after {
   transform: none !important;
-  background: rgba(15, 23, 42, 0.66);
-  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.55);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(15, 23, 42, 0.45) !important;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.50) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  opacity: 1 !important;
 }
 
 /* Theme token helpers (use these instead of scattered text-slate-* for consistent contrast) */

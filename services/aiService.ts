@@ -17,25 +17,33 @@ export interface AIConfig {
 
 export class AIService {
   private redactionService: RedactionService;
-  private config: AIConfig;
+  private config: AIConfig | null;
   private provider: AIProvider;
+  private isAvailable: boolean;
 
   constructor(config?: Partial<AIConfig>) {
     this.redactionService = new RedactionService();
     
     // Get API key from environment or config
+    // In Vite, use import.meta.env for client-side, but process.env works if defined in vite.config.ts
     const apiKey = config?.apiKey || 
-                   process.env.AI_API_KEY || 
-                   process.env.API_KEY || 
-                   process.env.GEMINI_API_KEY || 
-                   process.env.OPENAI_API_KEY ||
-                   process.env.ANTHROPIC_API_KEY ||
+                   (typeof process !== 'undefined' && process.env?.AI_API_KEY) ||
+                   (typeof process !== 'undefined' && process.env?.API_KEY) ||
+                   (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) ||
+                   (typeof process !== 'undefined' && process.env?.OPENAI_API_KEY) ||
+                   (typeof process !== 'undefined' && process.env?.ANTHROPIC_API_KEY) ||
                    '';
     
     if (!apiKey) {
-      throw new Error('AI API key is required. Set AI_API_KEY, API_KEY, or provider-specific key in environment variables.');
+      // Don't throw - mark as unavailable instead
+      this.isAvailable = false;
+      this.config = null;
+      this.provider = 'auto';
+      console.warn('AI API key not found. AI features will be disabled. Set AI_API_KEY, API_KEY, or provider-specific key in environment variables.');
+      return;
     }
 
+    this.isAvailable = true;
     // Detect provider from API key format or explicit config
     this.provider = config?.provider || this.detectProvider(apiKey);
     
@@ -45,6 +53,13 @@ export class AIService {
       model: config?.model || this.getDefaultModel(this.provider),
       baseURL: config?.baseURL,
     };
+  }
+
+  /**
+   * Check if AI service is available (has valid API key)
+   */
+  get available(): boolean {
+    return this.isAvailable && this.config !== null;
   }
 
   /**
@@ -90,6 +105,10 @@ export class AIService {
    * Transcribe audio to text
    */
   async transcribeAudio(base64Audio: string): Promise<{ text: string; confidence?: number; language?: string }> {
+    if (!this.available || !this.config) {
+      throw new Error('AI service is not available. Please configure an AI API key in environment variables.');
+    }
+
     // Mock implementation - in production, use actual speech-to-text API
     // For OpenAI: use Whisper API
     // For Google: use Speech-to-Text API
@@ -108,6 +127,10 @@ export class AIService {
    * Analyze deviation using configured AI provider
    */
   async analyzeDeviation(record: DeviationRecord, redactionMode: boolean): Promise<AIResponse> {
+    if (!this.available || !this.config) {
+      throw new Error('AI service is not available. Please configure an AI API key in environment variables.');
+    }
+
     let preparedData = JSON.parse(JSON.stringify(record));
     
     // Enhanced intelligent redaction
@@ -147,6 +170,9 @@ export class AIService {
    * Analyze with Gemini (if @google/genai is available)
    */
   private async analyzeWithGemini(preparedData: any): Promise<AIResponse> {
+    if (!this.config) {
+      throw new Error('AI service is not configured');
+    }
     try {
       // Dynamic import to avoid errors if package not installed
       const { GoogleGenAI, Type } = await import("@google/genai");
@@ -177,6 +203,9 @@ export class AIService {
    * Analyze with OpenAI
    */
   private async analyzeWithOpenAI(preparedData: any): Promise<AIResponse> {
+    if (!this.config) {
+      throw new Error('AI service is not configured');
+    }
     const prompt = this.buildAnalysisPrompt(preparedData);
     const schema = this.getOpenAISchema();
 
@@ -219,6 +248,9 @@ export class AIService {
    * Analyze with Anthropic Claude
    */
   private async analyzeWithAnthropic(preparedData: any): Promise<AIResponse> {
+    if (!this.config) {
+      throw new Error('AI service is not configured');
+    }
     const prompt = this.buildAnalysisPrompt(preparedData);
 
     try {
