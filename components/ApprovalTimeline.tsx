@@ -5,9 +5,14 @@ import { PredictionService, ApprovalPrediction, BottleneckAnalysis } from '../se
 interface ApprovalTimelineProps {
   deviation: DeviationRecord;
   compact?: boolean;
+  recentActions?: Array<{
+    action: string;
+    timestamp: Date;
+    type: 'save' | 'submit';
+  }>;
 }
 
-export default function ApprovalTimeline({ deviation, compact = false }: ApprovalTimelineProps) {
+export default function ApprovalTimeline({ deviation, compact = false, recentActions = [] }: ApprovalTimelineProps) {
   const [prediction, setPrediction] = useState<ApprovalPrediction | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,30 +72,38 @@ export default function ApprovalTimeline({ deviation, compact = false }: Approva
 
   if (compact) {
     return (
-      <div className="glass glass-highlight rounded-[16px] border border-white/50 dark:border-white/10 px-4 py-2.5 shadow-lg backdrop-blur-xl w-full">
-        <div className="flex items-center gap-3">
-          <div className="h-7 w-7 bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-500 dark:to-blue-400 rounded-lg flex items-center justify-center text-white shadow-md shadow-blue-500/30 flex-shrink-0">
-            <i className="fa-solid fa-clock text-[10px]"></i>
+      <div className="glass glass-highlight rounded-[24px] border border-white/50 dark:border-white/10 px-6 py-5 shadow-lg backdrop-blur-xl w-full">
+        <div className="flex items-start gap-4">
+          {/* Icon */}
+          <div className="h-12 w-12 bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-500 dark:to-blue-400 rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-500/30 flex-shrink-0 mt-0.5">
+            <i className="fa-solid fa-clock text-sm"></i>
           </div>
-          <div className="flex items-center justify-between gap-4 flex-1 min-w-0">
-            <div className="flex items-center gap-4 min-w-0 flex-1">
-              <div>
-                <div className="text-[10px] font-black ui-heading leading-tight whitespace-nowrap">Expected Approval</div>
-                <div className="flex items-center gap-2">
-                  <div className="text-[9px] font-medium ui-text-tertiary uppercase tracking-widest whitespace-nowrap">Timeline Prediction</div>
+          
+          {/* Main Content - Two Column Layout */}
+          <div className="flex-1 min-w-0">
+            {/* Top Row: Label and Date */}
+            <div className="flex items-start justify-between gap-4 mb-2">
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-black ui-heading leading-tight mb-1">Expected Approval</div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="text-[10px] font-medium ui-text-tertiary uppercase tracking-widest">Timeline Prediction</div>
                   {deviation.masterData.productSafetyRelevant && (
-                    <span className="text-[8px] font-black px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/25 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/30 uppercase whitespace-nowrap">
+                    <span className="text-[9px] font-black px-2 py-0.5 rounded bg-red-100 dark:bg-red-900/25 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/30 uppercase whitespace-nowrap">
                       <i className="fa-solid fa-shield-halved mr-1"></i>Safety
                     </span>
                   )}
                 </div>
               </div>
-              <div className="text-xs font-extrabold ui-text-primary whitespace-nowrap">
-                {expectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              <div className="text-right flex-shrink-0">
+                <div className="text-lg font-extrabold ui-text-primary leading-tight mb-1">
+                  {expectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border ${
+            
+            {/* Bottom Row: Days Badge and Bottlenecks */}
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <span className={`text-xs font-black px-3 py-1.5 rounded-full border flex-shrink-0 ${
                 daysUntil <= 3 ? 'bg-red-100 dark:bg-red-900/25 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800/30' :
                 daysUntil <= 7 ? 'bg-amber-100 dark:bg-amber-900/25 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800/30' :
                 'bg-emerald-100 dark:bg-emerald-900/25 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/30'
@@ -98,9 +111,9 @@ export default function ApprovalTimeline({ deviation, compact = false }: Approva
                 {daysUntil} {daysUntil === 1 ? 'day' : 'days'}
               </span>
               {prediction.bottlenecks.length > 0 && (
-                <div className="flex items-center gap-1.5">
-                  <i className="fa-solid fa-exclamation-triangle text-amber-500 dark:text-amber-400 text-[10px]"></i>
-                  <span className="text-[9px] font-bold ui-text-secondary whitespace-nowrap">
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <i className="fa-solid fa-exclamation-triangle text-amber-500 dark:text-amber-400 text-xs"></i>
+                  <span className="text-[10px] font-bold ui-text-secondary whitespace-nowrap">
                     {prediction.bottlenecks.length} bottleneck{prediction.bottlenecks.length > 1 ? 's' : ''}
                   </span>
                 </div>

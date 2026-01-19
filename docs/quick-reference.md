@@ -28,13 +28,17 @@ npm run preview
 
 | File | Purpose |
 |------|---------|
-| `App.tsx` | Main state machine, routing logic, form state |
-| `types.ts` | **Source of Truth** - All domain models |
-| `constants.tsx` | Master data (Plants, BUs, Triggers), tooltips |
-| `components/Layout.tsx` | Navigation sidebar and header |
-| `services/aiService.ts` | AI integration (supports multiple providers) |
-| `components/RiskTable.tsx` | FMEA risk management (S/O/D inputs) |
-| `components/ActionTable.tsx` | Corrective action tracking |
+| `App.tsx` | Main state machine, routing logic, form state, all page renderers |
+| `types.ts` | **Source of Truth** - All domain models (DeviationRecord, RiskItem, etc.) |
+| `constants.tsx` | Master data (Plants, BUs, Triggers, DURATIONS), tooltips |
+| `components/Layout.tsx` | Navigation sidebar (collapsible), floating header, theme toggle |
+| `services/aiService.ts` | AI integration (supports multiple providers: Gemini, OpenAI, Anthropic) |
+| `components/RiskTable.tsx` | FMEA risk management (S/O/D inputs) with AI recommendations |
+| `components/ActionTable.tsx` | Corrective action tracking with AI suggestions |
+| `components/RiskHeatmap.tsx` | Material Risk Heatmap with improved typography |
+| `components/GlobalAIPanel.tsx` | Global AI chat and voice assistant ("I A:M Q") |
+| `components/Archive.tsx` | Comprehensive archive with advanced filtering |
+| `components/FAQ.tsx` | FAQ, glossary, and bug reporting |
 
 ---
 
@@ -80,19 +84,38 @@ RPN = Severity × Occurrence × Detection
 - Labels: `text-[10px] font-black uppercase tracking-widest`
 - Headers: `font-extrabold` or `font-black`
 - Data: `font-semibold` or `font-bold`
+- Mandatory Fields: Red borders with `.required-field` class
 
 ### Glass Effects
 - `.glass`: Light glassmorphism (white/transparent)
 - `.glass-dark`: Dark glassmorphism (for sidebar)
+- `.frosted-panel`: Frozen glass effect (for chat panels)
+- `.floating-header`: Floating header with transparent glass
+- Golden Gradient: Yellow/amber gradients for segmented controls
+
+### Design Elements
+- **Golden Gradient Segmented Control**: Yellow/golden background with liquid glass effect
+- **Mandatory Fields**: Red borders (`border-2 border-red-500`) for required fields
+- **Button States**: Grey inactive, Blue active pills with solid backgrounds
+- **Material Risk Heatmap**: Enhanced typography with larger fonts and drop shadows
 
 ---
 
 ## Common Patterns
 
 ### Form Fields
+
+**Standard Field:**
 ```tsx
 <FormField label="Field Name" description={FIELD_DESCRIPTIONS.fieldName}>
   <input className="apple-input" />
+</FormField>
+```
+
+**Mandatory Field:**
+```tsx
+<FormField label="Required Field" description={FIELD_DESCRIPTIONS.fieldName}>
+  <input className="apple-input required-field" />
 </FormField>
 ```
 

@@ -1,22 +1,33 @@
 
 import React from 'react';
 
-const AnalyticsCharts: React.FC = () => {
+interface AnalyticsChartsProps {
+  deviationType?: 'Supplier' | 'Customer';
+}
+
+const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ deviationType = 'Supplier' }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       {/* Volume by BU Chart */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-extrabold ui-heading">Deviation Volume per BU</h3>
+          <h3 className="text-sm font-extrabold ui-heading">{deviationType === 'Customer' ? 'Customer Deviation Volume' : 'Deviation Volume per BU'}</h3>
           <span className="text-[10px] font-black uppercase tracking-widest ui-text-tertiary">Last 30 days</span>
         </div>
         <div className="space-y-4">
-          {[
+          {(deviationType === 'Customer' ? [
+            { name: 'BMW Group', val: 95, color: 'bg-blue-500' },
+            { name: 'Mercedes-Benz', val: 78, color: 'bg-emerald-500' },
+            { name: 'Volkswagen AG', val: 65, color: 'bg-purple-500' },
+            { name: 'Audi AG', val: 52, color: 'bg-amber-500' },
+            { name: 'Porsche AG', val: 38, color: 'bg-red-500' },
+            { name: 'Opel Automobile', val: 28, color: 'bg-indigo-500' },
+          ] : [
             { name: 'ET - Electronics', val: 85, color: 'bg-blue-500' },
             { name: 'RB - Roof Systems', val: 62, color: 'bg-emerald-500' },
             { name: 'RX - Custom Works', val: 45, color: 'bg-purple-500' },
             { name: 'EB - E-Solutions', val: 30, color: 'bg-amber-500' },
-          ].map((item) => (
+          ]).map((item) => (
             <div key={item.name} className="space-y-1.5">
               <div className="flex justify-between text-[11px] font-bold ui-text-secondary">
                 <span className="ui-text-primary">{item.name}</span>
@@ -49,15 +60,6 @@ const AnalyticsCharts: React.FC = () => {
             <p className="text-[10px] font-black ui-label mb-1">R&D Delay</p>
             <p className="text-xl font-black text-red-500">5.8d</p>
             <p className="text-[9px] font-bold ui-text-tertiary mt-1">+5% (Slower)</p>
-          </div>
-          <div className="col-span-2 p-5 rounded-[24px] bg-slate-900/90 dark:bg-slate-900 border border-white/10">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-[10px] font-black uppercase text-white/60">Throughput Target</span>
-              <span className="text-[10px] font-black text-emerald-300">92%</span>
-            </div>
-            <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-              <div className="h-full bg-emerald-400 w-[92%]"></div>
-            </div>
           </div>
         </div>
       </div>

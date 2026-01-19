@@ -24,8 +24,8 @@ const InfoIcon = ({ text }: { text: string }) => (
 );
 
 const RiskTable: React.FC<RiskTableProps> = ({ risks, onUpdate, deviation }) => {
-  const [showAIRecommendations, setShowAIRecommendations] = useState<{ source: 'Supplier' | 'Webasto' } | null>(null);
-  const addRisk = (source: 'Supplier' | 'Webasto') => {
+  const [showAIRecommendations, setShowAIRecommendations] = useState<{ source: 'Supplier' | 'Webasto' | 'Customer' } | null>(null);
+  const addRisk = (source: 'Supplier' | 'Webasto' | 'Customer') => {
     const newRisk: RiskItem = {
       id: Math.random().toString(36).substr(2, 9),
       source,
@@ -55,7 +55,7 @@ const RiskTable: React.FC<RiskTableProps> = ({ risks, onUpdate, deviation }) => 
     }));
   };
 
-  const renderSection = (source: 'Supplier' | 'Webasto') => {
+  const renderSection = (source: 'Supplier' | 'Webasto' | 'Customer') => {
     const filtered = risks.filter(r => r.source === source);
     return (
       <div className="mb-6">
@@ -109,31 +109,37 @@ const RiskTable: React.FC<RiskTableProps> = ({ risks, onUpdate, deviation }) => 
                         value={risk.description}
                         onChange={(e) => updateItem(risk.id, 'description', e.target.value)}
                         placeholder="Identify specific risk..."
-                        className="w-full apple-input bg-transparent border-none focus:ring-0 px-2 py-1 text-sm"
+                        className="w-full px-3 py-2 text-sm ui-text-primary rounded-lg bg-white/60 dark:bg-white/10 border border-white/40 dark:border-white/20 focus:bg-white/80 dark:focus:bg-white/15 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-all outline-none"
                       />
                     </td>
                     <td className="px-4 py-3">
                       <input 
-                        type="number" min="1" max="10"
-                        value={risk.severity}
-                        onChange={(e) => updateItem(risk.id, 'severity', parseInt(e.target.value))}
-                        className="w-20 apple-input text-center text-sm font-bold ui-text-primary"
+                        type="number" 
+                        min="1" 
+                        max="10"
+                        value={risk.severity || ''}
+                        onChange={(e) => updateItem(risk.id, 'severity', e.target.value ? parseInt(e.target.value) : 1)}
+                        className="w-20 px-2 py-2 text-center text-sm font-bold ui-text-primary rounded-lg bg-white/60 dark:bg-white/10 border border-white/40 dark:border-white/20 focus:bg-white/80 dark:focus:bg-white/15 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-all outline-none"
                       />
                     </td>
                     <td className="px-4 py-3">
                       <input 
-                        type="number" min="1" max="10"
-                        value={risk.occurrence}
-                        onChange={(e) => updateItem(risk.id, 'occurrence', parseInt(e.target.value))}
-                        className="w-20 apple-input text-center text-sm font-bold ui-text-primary"
+                        type="number" 
+                        min="1" 
+                        max="10"
+                        value={risk.occurrence || ''}
+                        onChange={(e) => updateItem(risk.id, 'occurrence', e.target.value ? parseInt(e.target.value) : 1)}
+                        className="w-20 px-2 py-2 text-center text-sm font-bold ui-text-primary rounded-lg bg-white/60 dark:bg-white/10 border border-white/40 dark:border-white/20 focus:bg-white/80 dark:focus:bg-white/15 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-all outline-none"
                       />
                     </td>
                     <td className="px-4 py-3">
                       <input 
-                        type="number" min="1" max="10"
-                        value={risk.detection}
-                        onChange={(e) => updateItem(risk.id, 'detection', parseInt(e.target.value))}
-                        className="w-20 apple-input text-center text-sm font-bold ui-text-primary"
+                        type="number" 
+                        min="1" 
+                        max="10"
+                        value={risk.detection || ''}
+                        onChange={(e) => updateItem(risk.id, 'detection', e.target.value ? parseInt(e.target.value) : 1)}
+                        className="w-20 px-2 py-2 text-center text-sm font-bold ui-text-primary rounded-lg bg-white/60 dark:bg-white/10 border border-white/40 dark:border-white/20 focus:bg-white/80 dark:focus:bg-white/15 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-all outline-none"
                       />
                     </td>
                     <td className={`px-4 py-3 text-center font-extrabold text-base ${risk.rpn >= 125 ? 'text-red-500 dark:text-red-400' : 'ui-text-primary'}`}>
@@ -166,6 +172,7 @@ const RiskTable: React.FC<RiskTableProps> = ({ risks, onUpdate, deviation }) => 
       <div className="space-y-6">
         {renderSection('Supplier')}
         {renderSection('Webasto')}
+        {deviation?.deviationType === 'Customer' && renderSection('Customer')}
         <div className="glass glass-highlight p-6 rounded-[24px] mt-6">
           <div className="flex items-center gap-4">
             <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#007aff] to-[#60a5fa] dark:from-[#60a5fa] dark:to-[#007aff] flex items-center justify-center shadow-lg shadow-[#007aff]/20">

@@ -11,10 +11,17 @@ A **High-Fidelity Enterprise Quality Management System (QMS)** for Webasto Suppl
 - 🤖 **AI-Powered Quality Auditor** - Configurable AI provider integration for intelligent deviation analysis
 - 🔒 **Intelligent Redaction** - Automatic PII detection and masking for data sovereignty
 - 🌍 **Multi-Lingual Translation** - Technical translation with glossary preservation (English, Deutsch, 日本語)
-- 📄 **PDF/A Export** - IATF-compliant document generation with QR codes
+- 📄 **PDF/A Export** - ISO 9001 & IATF 16949-compliant document generation with QR codes
 - 📊 **FMEA Risk Engine** - Automated RPN calculation and risk assessment
 - 🔄 **Dynamic Approval Routing** - Logic-based workflow determined by BU, Trigger, and Duration
-- 🎨 **Premium Enterprise UI** - Apple-style glassmorphism design system
+- 🎨 **Premium Enterprise UI** - Apple-style glassmorphism design with golden gradients
+- 🏭 **Dual Deviation Types** - Support for both Supplier and Customer deviation workflows
+- 📈 **Advanced Analytics** - Material Risk Heatmaps, RPN trends, and predictive timelines
+- 🎤 **Voice Assistant** - Voice-to-text transcription and structured data extraction
+- 📱 **Offline PWA** - Service Worker caching with Background Sync API
+- 📋 **Comprehensive Archive** - Advanced filtering, search, and export capabilities
+- ⚙️ **Admin Console** - User management, routing matrix, AI governance, and system settings
+- ✅ **ISO 9001 & IATF 16949** - Dual-standard compliance tracking and audit readiness
 
 ## Run Locally
 

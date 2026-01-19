@@ -49,9 +49,9 @@ export default function GlobalAIPanel({
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop - minimal blur to keep content visible */}
       <div
-        className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm z-50 transition-opacity"
+        className="fixed inset-0 bg-black/20 dark:bg-black/30 z-50 transition-opacity"
         onClick={onClose}
       />
 

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface LayoutProps {
@@ -7,16 +7,19 @@ interface LayoutProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   onAIPanelOpen?: () => void;
+  deviationType?: 'Supplier' | 'Customer';
+  onDeviationTypeChange?: (type: 'Supplier' | 'Customer') => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onAIPanelOpen }) => {
+const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onAIPanelOpen, deviationType, onDeviationTypeChange }) => {
   const { effectiveTheme, toggleTheme } = useTheme();
   const isDark = effectiveTheme === 'dark';
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-300 ${isDark ? 'bg-slate-900' : 'bg-slate-50'}`}>
-      {/* Header */}
-      <header className="glass glass-highlight sticky top-0 z-50 flex justify-between items-center px-4 md:px-8 border-b shrink-0 h-16">
+      {/* Header - Floating with frozen glass effect */}
+      <header className="floating-header fixed top-4 left-4 right-4 z-50 flex justify-between items-center px-4 md:px-8 shrink-0 h-16 rounded-2xl">
         <div className="flex items-center gap-4 md:gap-6">
           <div className="flex items-center">
             <span className={`text-xl font-extrabold tracking-tighter transition-colors ${isDark ? 'text-slate-100' : 'ui-heading'}`}>
@@ -30,6 +33,60 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onAI
         </div>
         
         <div className="flex items-center gap-3 md:gap-6">
+          {/* Deviation Type Toggle */}
+          {deviationType !== undefined && onDeviationTypeChange && (
+            <>
+              <button
+                onClick={() => onDeviationTypeChange('Supplier')}
+                className={`flex items-center gap-2 px-3 py-2 sm:px-4 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 relative z-10 flex-shrink-0 ${
+                  deviationType === 'Supplier'
+                    ? isDark
+                      ? 'bg-gradient-to-r from-blue-500/20 to-blue-600/20 hover:from-blue-500/30 hover:to-blue-600/30 text-blue-400 border border-blue-500/30'
+                      : 'bg-gradient-to-r from-blue-500/15 to-blue-600/15 hover:from-blue-500/25 hover:to-blue-600/25 text-blue-600 border border-blue-500/20'
+                    : isDark
+                      ? 'bg-white/5 hover:bg-white/10 text-slate-400 hover:text-slate-300 border border-white/10'
+                      : 'bg-white/40 hover:bg-white/60 text-slate-600 hover:text-slate-800 border border-white/20'
+                } shadow-lg ${deviationType === 'Supplier' ? 'shadow-blue-500/20' : 'shadow-slate-500/10'}`}
+                title="Supplier Deviations"
+              >
+                <div className={`h-6 w-6 rounded-lg flex items-center justify-center shadow-md flex-shrink-0 ${
+                  deviationType === 'Supplier'
+                    ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-500/30'
+                    : 'bg-white/20 dark:bg-white/10 text-slate-500 dark:text-slate-400'
+                }`}>
+                  <i className="fa-solid fa-truck text-sm"></i>
+                </div>
+                <span className="text-xs font-extrabold uppercase tracking-wider hidden sm:block whitespace-nowrap">
+                  Supplier
+                </span>
+              </button>
+              <button
+                onClick={() => onDeviationTypeChange('Customer')}
+                className={`flex items-center gap-2 px-3 py-2 sm:px-4 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 relative z-10 flex-shrink-0 ${
+                  deviationType === 'Customer'
+                    ? isDark
+                      ? 'bg-gradient-to-r from-purple-500/20 to-purple-600/20 hover:from-purple-500/30 hover:to-purple-600/30 text-purple-400 border border-purple-500/30'
+                      : 'bg-gradient-to-r from-purple-500/15 to-purple-600/15 hover:from-purple-500/25 hover:to-purple-600/25 text-purple-600 border border-purple-500/20'
+                    : isDark
+                      ? 'bg-white/5 hover:bg-white/10 text-slate-400 hover:text-slate-300 border border-white/10'
+                      : 'bg-white/40 hover:bg-white/60 text-slate-600 hover:text-slate-800 border border-white/20'
+                } shadow-lg ${deviationType === 'Customer' ? 'shadow-purple-500/20' : 'shadow-slate-500/10'}`}
+                title="Customer Deviations"
+              >
+                <div className={`h-6 w-6 rounded-lg flex items-center justify-center shadow-md flex-shrink-0 ${
+                  deviationType === 'Customer'
+                    ? 'bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-purple-500/30'
+                    : 'bg-white/20 dark:bg-white/10 text-slate-500 dark:text-slate-400'
+                }`}>
+                  <i className="fa-solid fa-user-tie text-sm"></i>
+                </div>
+                <span className="text-xs font-extrabold uppercase tracking-wider hidden sm:block whitespace-nowrap">
+                  Customer
+                </span>
+              </button>
+            </>
+          )}
+
           {/* I A:M Q Button */}
           <button
             onClick={() => {
@@ -93,55 +150,86 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onAI
         </div>
       </header>
 
-      <div className="flex flex-1">
+      <div className="flex flex-1 pt-20 md:pt-24">
         {/* Sidebar */}
-        <aside className={`w-20 xl:w-64 ${isDark ? 'glass-dark' : 'glass'} p-4 hidden md:flex flex-col gap-2 border-r shrink-0 transition-all duration-500 ${
+        <aside className={`fixed left-0 top-20 md:top-24 bottom-0 ${isSidebarCollapsed ? 'w-20' : 'w-20 xl:w-64'} ${isDark ? 'glass-dark' : 'glass'} p-4 hidden md:flex flex-col gap-2 border-r shrink-0 transition-all duration-500 z-40 ${
           isDark ? 'border-slate-700/50' : 'border-slate-200/40'
         }`}>
-          <div className="px-3 py-4 mb-4">
-             <div className={`h-1.5 w-12 rounded-full transition-colors ${isDark ? 'bg-white/20' : 'bg-white/20'}`}></div>
+          <div className="px-3 py-4 mb-4 flex items-center justify-between gap-2">
+             {!isSidebarCollapsed && (
+               <div className={`h-1.5 w-12 rounded-full transition-colors ${isDark ? 'bg-white/20' : 'bg-white/20'}`}></div>
+             )}
+             <button
+               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+               className={`p-2 rounded-lg transition-all hover:scale-105 active:scale-95 ${
+                 isDark
+                   ? 'hover:bg-white/10 text-white/70 hover:text-white'
+                   : 'hover:bg-white/50 text-slate-600 hover:text-slate-900'
+               }`}
+               title={isSidebarCollapsed ? 'Expand menu' : 'Collapse menu'}
+             >
+               <i className={`fa-solid ${isSidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'} text-xs`}></i>
+             </button>
           </div>
           
-          <nav className="space-y-1.5 flex-1">
-            <NavItem icon="fa-gauge-high" label="Dashboard" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} isDark={isDark} />
-            <NavItem icon="fa-plus" label="New Deviation" active={activeTab === 'new'} onClick={() => setActiveTab('new')} isDark={isDark} />
-            <NavItem icon="fa-inbox" label="Approvals" badge="3" active={activeTab === 'approvals'} onClick={() => setActiveTab('approvals')} isDark={isDark} />
-            <NavItem icon="fa-shield-halved" label="Compliance" active={activeTab === 'compliance'} onClick={() => setActiveTab('compliance')} isDark={isDark} />
-            <NavItem icon="fa-archive" label="Archive" active={activeTab === 'archive'} onClick={() => setActiveTab('archive')} isDark={isDark} />
+          <nav className="space-y-1.5 flex-1 overflow-y-auto">
+            <NavItem 
+              icon="fa-gauge-high" 
+              label="Dashboard" 
+              active={activeTab === 'dashboard'} 
+              onClick={() => setActiveTab('dashboard')} 
+              isDark={isDark}
+              isCollapsed={isSidebarCollapsed}
+              secondaryIcon={deviationType === 'Customer' ? 'fa-user-tie' : deviationType === 'Supplier' ? 'fa-truck' : undefined}
+            />
+            <NavItem icon="fa-plus" label="New Deviation" active={activeTab === 'new'} onClick={() => setActiveTab('new')} isDark={isDark} isCollapsed={isSidebarCollapsed} />
+            <NavItem icon="fa-inbox" label="Approvals" badge="3" active={activeTab === 'approvals'} onClick={() => setActiveTab('approvals')} isDark={isDark} isCollapsed={isSidebarCollapsed} />
+            <NavItem icon="fa-shield-halved" label="Compliance" active={activeTab === 'compliance'} onClick={() => setActiveTab('compliance')} isDark={isDark} isCollapsed={isSidebarCollapsed} />
+            <NavItem icon="fa-archive" label="Archive" active={activeTab === 'archive'} onClick={() => setActiveTab('archive')} isDark={isDark} isCollapsed={isSidebarCollapsed} />
             <div className={`pt-4 mt-4 border-t transition-colors ${isDark ? 'border-white/5' : 'border-white/5'}`}>
-               <NavItem icon="fa-circle-question" label="FAQ & Support" active={activeTab === 'faq'} onClick={() => setActiveTab('faq')} isDark={isDark} />
-               <NavItem icon="fa-sliders" label="Admin" active={activeTab === 'admin'} onClick={() => setActiveTab('admin')} isDark={isDark} />
+               <NavItem icon="fa-circle-question" label="FAQ & Support" active={activeTab === 'faq'} onClick={() => setActiveTab('faq')} isDark={isDark} isCollapsed={isSidebarCollapsed} />
+               <NavItem icon="fa-sliders" label="Admin" active={activeTab === 'admin'} onClick={() => setActiveTab('admin')} isDark={isDark} isCollapsed={isSidebarCollapsed} />
             </div>
           </nav>
 
           <div className="mt-auto px-2 xl:px-4 py-6">
-             <div className={`p-3 xl:p-4 rounded-2xl border backdrop-blur-sm transition-all hover:scale-105 ${
-               isDark 
-                 ? 'bg-white/5 border-white/5 hover:bg-white/10' 
-                 : 'bg-white/5 border-white/5 hover:bg-white/10'
-             }`}>
-                <div className="flex items-center gap-2 mb-2">
-                   <div className="h-2 w-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.5)]"></div>
-                   <span className={`text-[9px] xl:text-[10px] font-black uppercase tracking-widest transition-colors ${
-                     isDark ? 'text-white/40' : 'text-white/40'
-                   }`}>
-                     System
-                   </span>
-                </div>
-                <p className={`text-[10px] xl:text-[11px] font-medium truncate transition-colors ${
-                  isDark ? 'text-white/60' : 'text-white/60'
-                }`}>
-                  All nodes operational
-                </p>
-             </div>
+             {isSidebarCollapsed ? (
+               <div className={`p-2 rounded-xl border backdrop-blur-sm transition-all hover:scale-105 flex items-center justify-center ${
+                 isDark 
+                   ? 'bg-white/5 border-white/5 hover:bg-white/10' 
+                   : 'bg-white/5 border-white/5 hover:bg-white/10'
+               }`} title="System Status: All nodes operational">
+                  <div className="h-3 w-3 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.5)]"></div>
+               </div>
+             ) : (
+               <div className={`p-3 xl:p-4 rounded-2xl border backdrop-blur-sm transition-all hover:scale-105 ${
+                 isDark 
+                   ? 'bg-white/5 border-white/5 hover:bg-white/10' 
+                   : 'bg-white/5 border-white/5 hover:bg-white/10'
+               }`}>
+                  <div className="flex items-center gap-2 mb-2">
+                     <div className="h-2 w-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.5)]"></div>
+                     <span className={`text-[9px] xl:text-[10px] font-black uppercase tracking-widest transition-colors ${
+                       isDark ? 'text-white/40' : 'text-white/40'
+                     }`}>
+                       System
+                     </span>
+                  </div>
+                  <p className={`text-[10px] xl:text-[11px] font-medium truncate transition-colors ${
+                    isDark ? 'text-white/60' : 'text-white/60'
+                  }`}>
+                    All nodes operational
+                  </p>
+               </div>
+             )}
           </div>
         </aside>
 
         {/* Main Content Area */}
-        <main className={`flex-1 overflow-x-hidden relative transition-colors ${
+        <main className={`flex-1 overflow-x-hidden relative transition-all duration-500 ${
           isDark ? 'bg-slate-900/50' : 'bg-slate-50/50'
-        }`}>
-          <div className="p-4 md:p-8 xl:p-12">
+        } ${isSidebarCollapsed ? 'ml-20' : 'ml-20 xl:ml-64'}`}>
+          <div className="p-4 md:p-8 xl:p-12 pt-28 md:pt-32">
             {children}
           </div>
         </main>
@@ -150,10 +238,10 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onAI
   );
 };
 
-const NavItem = ({ icon, label, active, onClick, badge, isDark }: any) => (
+const NavItem = ({ icon, label, active, onClick, badge, isDark, secondaryIcon, isCollapsed }: any) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center justify-between px-3 xl:px-4 py-2.5 xl:py-3 rounded-xl transition-all duration-300 group relative overflow-hidden ${
+    className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} px-3 xl:px-4 py-2.5 xl:py-3 rounded-xl transition-all duration-300 group relative overflow-hidden ${
       active
         ? (isDark
             ? 'bg-white/14 text-white shadow-[0_6px_22px_rgba(0,0,0,0.30)] backdrop-blur-sm border border-white/12'
@@ -162,8 +250,9 @@ const NavItem = ({ icon, label, active, onClick, badge, isDark }: any) => (
             ? 'text-white/70 hover:text-white hover:bg-white/8 border border-transparent'
             : 'text-slate-700 hover:text-slate-900 hover:bg-white/50 border border-transparent')
     }`}
+    title={isCollapsed ? label : undefined}
   >
-    <div className="flex items-center gap-3 xl:gap-3.5">
+    <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 xl:gap-3.5'}`}>
       <div className={`relative flex items-center justify-center w-5 h-5 transition-all ${active ? 'scale-110' : 'group-hover:scale-105'}`}>
         <i
           className={`fa-solid ${icon} text-sm transition-all ${
@@ -178,9 +267,26 @@ const NavItem = ({ icon, label, active, onClick, badge, isDark }: any) => (
           <div className="absolute inset-0 bg-emerald-400/20 rounded-full blur-sm"></div>
         )}
       </div>
-      <span className="font-bold text-xs uppercase tracking-wider hidden xl:block transition-all">
-        {label}
-      </span>
+      {!isCollapsed && (
+        <>
+          <span className="font-bold text-xs uppercase tracking-wider hidden xl:block transition-all">
+            {label}
+          </span>
+          {secondaryIcon && (
+            <div className={`ml-auto flex items-center justify-center w-4 h-4 rounded-full transition-all ${
+              active
+                ? secondaryIcon === 'fa-user-tie' 
+                  ? 'bg-purple-500/20 text-purple-600 dark:text-purple-400'
+                  : 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
+                : isDark
+                  ? 'text-white/40'
+                  : 'text-slate-400'
+            }`}>
+              <i className={`fa-solid ${secondaryIcon} text-[10px]`}></i>
+            </div>
+          )}
+        </>
+      )}
     </div>
     {badge && (
       <span className="bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-lg shadow-emerald-500/30 animate-pulse">

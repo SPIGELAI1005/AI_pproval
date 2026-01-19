@@ -6,6 +6,7 @@ interface AdaptiveCardPreviewProps {
   deviation: DeviationRecord;
   approver: string;
   stepId: string;
+  deviationType?: 'Supplier' | 'Customer';
   onSend?: (platform: 'teams' | 'slack') => Promise<void>;
 }
 
@@ -13,6 +14,7 @@ export default function AdaptiveCardPreview({
   deviation,
   approver,
   stepId,
+  deviationType = 'Supplier',
   onSend,
 }: AdaptiveCardPreviewProps) {
   const [selectedPlatform, setSelectedPlatform] = useState<'teams' | 'slack'>('teams');
@@ -117,7 +119,7 @@ export default function AdaptiveCardPreview({
             <div className="space-y-2 text-xs">
               <div><strong>Deviation ID:</strong> {deviation.id}</div>
               <div><strong>Material:</strong> {deviation.masterData.materialNo || 'N/A'}</div>
-              <div><strong>Supplier:</strong> {deviation.masterData.supplierName || 'N/A'}</div>
+              <div><strong>{deviationType === 'Customer' ? 'Customer' : 'Supplier'}:</strong> {deviationType === 'Customer' ? (deviation.masterData.customerName || 'N/A') : (deviation.masterData.supplierName || 'N/A')}</div>
               <div><strong>Status:</strong> {deviation.status}</div>
               {deviation.risks.length > 0 && (
                 <div>

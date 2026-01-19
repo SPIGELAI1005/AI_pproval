@@ -5,9 +5,10 @@ This document serves as a knowledge repository for project decisions, learnings,
 ## Project Overview
 
 **Project Name**: AI:PPROVAL - Webasto Supplier Deviation Approval System  
-**Purpose**: High-Fidelity Enterprise Quality Management System (QMS) for IATF 16949 compliance  
+**Purpose**: High-Fidelity Enterprise Quality Management System (QMS) for ISO 9001 & IATF 16949 compliance  
 **Domain**: Automotive Manufacturing Quality Management  
-**Status**: Active Development - Phase 2 Implementation
+**Status**: Active Development - Phase 2 Complete, Phase 3 Planning  
+**Version**: 2.1.0
 
 ## Key Architectural Decisions
 
@@ -86,6 +87,10 @@ This document serves as a knowledge repository for project decisions, learnings,
 - Dark mode needs lighter text colors for readability
 - Status indicators benefit from semantic colors
 - Compact timelines improve information density
+- Golden gradients add premium feel to segmented controls
+- Mandatory field indicators (red borders) improve form clarity
+- Improved typography enhances readability on colored backgrounds (heatmaps)
+- Solid backgrounds prevent color bleeding from gradients
 
 ### Technical
 - Provider abstraction simplifies AI integration
@@ -103,12 +108,16 @@ This document serves as a knowledge repository for project decisions, learnings,
 - ✅ Conflict detection
 - ✅ Vision verification
 
-### Phase 2 - Automation (In Progress)
+### Phase 2 - Automation (Completed ✅)
 - ✅ Predictive timelines
 - ✅ Adaptive cards
-- ⏳ Voice assistant
-- ⏳ Advanced analytics
-- ⏳ Offline PWA
+- ✅ Voice assistant ("I A:M Q")
+- ✅ Advanced analytics (Material Risk Heatmaps)
+- ✅ Offline PWA (Service Worker, IndexedDB, Background Sync)
+- ✅ Comprehensive Archive page
+- ✅ Enhanced Admin console with Settings
+- ✅ ISO 9001 & IATF 16949 dual compliance
+- ✅ Supplier/Customer deviation types
 
 ### Phase 3 - Scale (Planned)
 - ⏳ Supplier portal
@@ -141,9 +150,28 @@ This document serves as a knowledge repository for project decisions, learnings,
 - Caching strategies
 - CDN for static assets
 
+## Latest Updates (v2.1.0 - January 28, 2025)
+
+### Major Additions
+- **Comprehensive Archive Page**: Advanced filtering, search, statistics, and export
+- **Enhanced Admin Console**: New System Settings section with audit logs
+- **ISO 9001 & IATF 16949 Dual Compliance**: Full dual-standard tracking and reporting
+- **Supplier/Customer Deviation Types**: Complete workflow support for both types
+- **Material Risk Heatmap Improvements**: Enhanced typography and visibility
+- **Form Enhancements**: Mandatory field indicators, active buttons with confirmations
+- **Golden Gradient Design**: Premium segmented control with liquid glass effect
+
+### Design Improvements
+- Improved text visibility across all components
+- Better contrast ratios for accessibility
+- Enhanced spacing and padding
+- Refined glassmorphism effects
+- Better button states and visual feedback
+
 ## Notes
 
 - All AI features respect data sovereignty with redaction
 - Design system follows Apple Human Interface Guidelines
-- IATF 16949 compliance is a core requirement
+- ISO 9001 & IATF 16949 compliance is a core requirement
 - Multi-lingual support is essential for global operations
+- Dual deviation type support (Supplier/Customer) for comprehensive workflows

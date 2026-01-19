@@ -17,9 +17,10 @@ When a vendor cannot meet exact technical specifications, they request a tempora
 
 ### 1.2 Compliance Framework
 
-- **IATF 16949 Standards**: Strictly adheres to automotive quality management system requirements
+- **ISO 9001 & IATF 16949 Standards**: Dual-standard compliance tracking and reporting
 - **Audit Readiness**: Automated scoring and documentation validation
 - **Traceability**: Complete audit trail of all decisions and approvals
+- **Compliance Dashboard**: Comprehensive metrics for documentation health, CA closure rates, and audit readiness
 
 ### 1.3 Risk Engine (FMEA Logic)
 
@@ -88,22 +89,33 @@ Dynamic routing logic determines required approvers based on:
 
 - **Primary Blue**: `#007aff` (Apple-style system blue)
 - **Dark Blue**: `#00305d` (Webasto brand)
+- **Golden Gradient**: Yellow/amber gradients for premium segmented controls
 - **Status Colors**:
   - Success: `emerald-500`
   - Warning: `amber-500`
   - Critical: `red-600`
   - Info: `slate-400`
+- **Mandatory Fields**: Red borders (`#ef4444`) with subtle shadows
 
 ### 2.5 Component Architecture
 
 **Modular Structure:**
 
-- `Layout.tsx`: Persistent sidebar navigation and glass-effect header
-- `RiskTable.tsx`: FMEA risk management with S/O/D inputs
-- `ActionTable.tsx`: Corrective and immediate action tracking
-- `AIAssistant.tsx`: AI analysis panel with redaction mode
-- `AnalyticsCharts.tsx`: Performance visualization
-- `ActivityFeed.tsx`: Real-time activity stream
+- `Layout.tsx`: Persistent sidebar navigation with collapsible menu and floating glass-effect header
+- `RiskTable.tsx`: FMEA risk management with S/O/D inputs and AI recommendations
+- `ActionTable.tsx`: Corrective and immediate action tracking with AI suggestions
+- `AIAssistant.tsx`: AI analysis panel with redaction mode (legacy component)
+- `GlobalAIPanel.tsx`: Global AI chat and voice assistant panel ("I A:M Q")
+- `AIChat.tsx`: Chat interface with prompt suggestions
+- `VoiceAssistant.tsx`: Voice-to-text transcription and structured data extraction
+- `AnalyticsCharts.tsx`: Performance visualization with dynamic data based on deviation type
+- `ActivityFeed.tsx`: Real-time activity stream with dynamic content
+- `RiskHeatmap.tsx`: Material Risk Heatmap with improved typography and visibility
+- `ApprovalTimeline.tsx`: Predictive approval timeline with recent actions
+- `AdaptiveCardPreview.tsx`: Teams/Slack adaptive card preview and generation
+- `FAQ.tsx`: Comprehensive FAQ with glossary and bug report form
+- `ConfirmationModal.tsx`: Reusable confirmation modal for user actions
+- `OfflineIndicator.tsx`: PWA offline status indicator
 
 ---
 
@@ -248,12 +260,18 @@ D_AI_pproval/
 - User profile section
 
 **Navigation Tabs:**
-1. Dashboard
-2. New Deviation
-3. Approvals (with badge count)
-4. Compliance
-5. Archive
-6. Admin
+1. **Dashboard**: Performance metrics, analytics charts, activity feed, and risk heatmap
+2. **New Deviation**: Multi-tab form with Classification, Master Data, Details, Risks, Actions, Approvals
+3. **Approvals**: Approval queue with decision workflow
+4. **Compliance**: ISO 9001 & IATF 16949 compliance dashboard with audit readiness
+5. **Archive**: Comprehensive historical records with advanced filtering and search
+6. **FAQ & Support**: Frequently asked questions, glossary, and bug reporting
+7. **Admin**: User management, routing matrix, AI governance, and system settings
+
+**Header Controls:**
+- **I A:M Q Button**: Global AI chat and voice assistant access
+- **Supplier/Customer Toggle**: Switch between Supplier and Customer deviation workflows
+- **Theme Toggle**: Dark/Light mode switching
 
 ---
 
@@ -316,15 +334,29 @@ D_AI_pproval/
    - Model connectivity testing
    - Data sovereignty policy enforcement
 
+4. **System Settings** (New)
+   - System configuration (application name, version, URL)
+   - Notification settings (Email, Slack, Teams integration)
+   - Compliance settings (PDF/A level, auto-archive, IATF mode)
+   - Data retention policies
+   - Audit logs with activity tracking
+
 ### 5.4 Form State Management
 
 **Multi-Tab Form Structure:**
-1. Classification (Language, BU, Trigger, Duration)
-2. Master Data (Material, Supplier, Plant, Dates, Safety flags)
-3. Details (Specification, Deviation description)
-4. Risks (FMEA risk table)
-5. Actions (Corrective and immediate actions)
-6. Approvals (Generated routing preview)
+1. **Classification**: Language, BU, Trigger, Duration (all mandatory with red borders)
+2. **Master Data**: Material, Supplier/Customer info, Plant, Dates, Safety flags, Comments
+3. **Details**: Specification requirement, Deviation details, Vision upload
+4. **Risks**: FMEA risk table with AI recommendations
+5. **Actions**: Corrective and immediate actions with AI suggestions and 8D/CAPA generator
+6. **Approvals**: Generated routing preview with adaptive cards
+
+**Form Features:**
+- **Mandatory Field Indicators**: Red borders on required fields
+- **Action Buttons**: Discard (red), Export PDF/A (muted), Save Draft (muted), Submit (primary)
+- **Confirmation Modals**: Pop-up confirmations for Save Draft and Submit actions
+- **Timeline Integration**: Actions are logged in the predictive timeline
+- **Dynamic Content**: Fields adapt based on Supplier vs Customer deviation type
 
 **State Updates:**
 - Classification changes → Recalculate routing

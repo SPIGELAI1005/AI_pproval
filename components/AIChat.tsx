@@ -204,7 +204,7 @@ export default function AIChat({ onSendMessage, deviation, inputRef: externalInp
             <button
               onClick={handleSend}
               disabled={!inputValue.trim() || isLoading}
-              className={`absolute right-2 bottom-2 h-8 w-8 rounded-lg flex items-center justify-center transition-all ${
+              className={`absolute right-2 bottom-3 h-8 w-8 rounded-lg flex items-center justify-center transition-all ${
                 !inputValue.trim() || isLoading
                   ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                   : 'bg-emerald-500 text-white hover:bg-emerald-600 dark:hover:bg-emerald-400 hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/30'

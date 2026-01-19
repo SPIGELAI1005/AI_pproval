@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { ActionItem, DeviationRecord } from '../types';
 import { AIRecommendations } from './AIRecommendations';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ActionTableProps {
   actions: ActionItem[];
@@ -12,6 +13,8 @@ interface ActionTableProps {
 
 const ActionTable: React.FC<ActionTableProps> = ({ actions, type, onUpdate, deviation }) => {
   const [showAIRecommendations, setShowAIRecommendations] = useState(false);
+  const { effectiveTheme } = useTheme();
+  const isDark = effectiveTheme === 'dark';
   const filteredActions = actions.filter(a => a.type === type);
 
   const addAction = () => {
@@ -83,7 +86,7 @@ const ActionTable: React.FC<ActionTableProps> = ({ actions, type, onUpdate, devi
                     <td className="px-6 py-3">
                       <input 
                         type="text" 
-                        className="w-full apple-input bg-transparent border-none focus:ring-0 px-2 py-1 text-sm ui-text-primary font-medium"
+                        className="w-full px-3 py-2 text-sm ui-text-primary font-medium rounded-lg bg-white/60 dark:bg-white/10 border border-white/40 dark:border-white/20 focus:bg-white/80 dark:focus:bg-white/15 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-all outline-none"
                         placeholder="Enter action details..."
                         value={action.description}
                         onChange={e => updateAction(action.id, 'description', e.target.value)}
@@ -92,30 +95,39 @@ const ActionTable: React.FC<ActionTableProps> = ({ actions, type, onUpdate, devi
                     <td className="px-4 py-3">
                       <input 
                         type="text" 
-                        className="w-full apple-input bg-transparent border-none focus:ring-0 px-2 py-1 text-sm ui-text-primary"
+                        className="w-full px-3 py-2 text-sm ui-text-primary rounded-lg bg-white/60 dark:bg-white/10 border border-white/40 dark:border-white/20 focus:bg-white/80 dark:focus:bg-white/15 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-all outline-none"
                         placeholder="Role/Name"
                         value={action.owner}
                         onChange={e => updateAction(action.id, 'owner', e.target.value)}
                       />
                     </td>
                     <td className="px-4 py-3">
-                      <input 
-                        type="date" 
-                        className="w-full apple-input bg-transparent border-none focus:ring-0 px-2 py-1 text-sm ui-text-primary"
-                        value={action.dueDate}
-                        onChange={e => updateAction(action.id, 'dueDate', e.target.value)}
-                      />
+                      <div className="relative">
+                        <input 
+                          type="date" 
+                          className="w-full px-3 py-2 pr-8 text-sm ui-text-primary rounded-lg bg-white/60 dark:bg-white/10 border border-white/40 dark:border-white/20 focus:bg-white/80 dark:focus:bg-white/15 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-all outline-none [color-scheme:light] dark:[color-scheme:dark]"
+                          value={action.dueDate || ''}
+                          onChange={e => updateAction(action.id, 'dueDate', e.target.value)}
+                        />
+                        <i className="fa-solid fa-calendar-days absolute right-2 top-1/2 -translate-y-1/2 text-xs ui-text-tertiary pointer-events-none"></i>
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <select 
-                        className="w-full apple-select bg-transparent border-none focus:ring-0 px-2 py-1 text-sm ui-text-primary font-bold"
+                        className="w-full px-3 py-2 pr-8 text-sm ui-text-primary font-bold rounded-lg bg-white/60 dark:bg-white/10 border border-white/40 dark:border-white/20 focus:bg-white/80 dark:focus:bg-white/15 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-all outline-none appearance-none cursor-pointer"
                         value={action.status}
                         onChange={e => updateAction(action.id, 'status', e.target.value)}
+                        style={{
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' stroke='${isDark ? '%23cbd5e1' : '%23475569'}' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 0.5rem center',
+                          backgroundSize: '1rem 1rem'
+                        }}
                       >
-                        <option>Open</option>
-                        <option>On Track</option>
-                        <option>Delayed</option>
-                        <option>Closed</option>
+                        <option value="Open">Open</option>
+                        <option value="On Track">On Track</option>
+                        <option value="Delayed">Delayed</option>
+                        <option value="Closed">Closed</option>
                       </select>
                     </td>
                     <td className="px-4 py-3 text-center">

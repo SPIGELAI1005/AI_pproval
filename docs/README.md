@@ -61,10 +61,11 @@ Executive summary of the strategic roadmap:
 ## Key Concepts
 
 - **SDA**: Supplier Deviation Approval - temporary allowance when vendors cannot meet specifications
-- **IATF 16949**: Automotive quality management standard this system enforces
+- **SDA/CDA**: Supports both Supplier and Customer Deviation Approval workflows
+- **ISO 9001 & IATF 16949**: Dual-standard compliance tracking and reporting
 - **FMEA**: Failure Mode and Effects Analysis - risk calculation methodology
 - **RPN**: Risk Priority Number (S × O × D) - critical threshold is 125
-- **AI:PPROVAL**: The AI-powered quality auditor feature
+- **AI:PPROVAL / "I A:M Q"**: The AI-powered quality auditor feature (chat and voice)
 
 ---
 
@@ -79,4 +80,5 @@ When making changes:
 
 ---
 
-**Last Updated**: 2025-01-27
+**Last Updated**: 2025-01-28  
+**Current Version**: 2.1.0

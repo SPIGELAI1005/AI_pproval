@@ -1,36 +1,55 @@
 
 import React from 'react';
 
+interface ActivityFeedProps {
+  deviationType?: 'Supplier' | 'Customer';
+}
+
 interface ActivityItem {
   id: string;
   user: string;
   action: string;
   target: string;
   time: string;
-  type: 'creation' | 'approval' | 'upload' | 'comment';
+  type: 'creation' | 'approval' | 'upload' | 'comment' | 'rejection';
 }
 
-const activities: ActivityItem[] = [
+const supplierActivities: ActivityItem[] = [
   { id: '1', user: 'George Neacsu', action: 'created new deviation', target: 'DAI_ET-2026-8816', time: '12m ago', type: 'creation' },
-  { id: '2', user: 'System (AI)', action: 'identified high-risk RPN (150)', target: 'DAI_ET-2026-8816', time: '11m ago', type: 'comment' },
+  { id: '2', user: 'I A:M Q', action: 'identified high-risk RPN (150)', target: 'DAI_ET-2026-8816', time: '11m ago', type: 'comment' },
   { id: '3', user: 'Supplier Portal', action: 'uploaded Test Report.pdf', target: 'DAI_RX-2026-0122', time: '2h ago', type: 'upload' },
   { id: '4', user: 'Marcus Weber', action: 'approved technical review', target: 'DAI_RB-2025-0988', time: '4h ago', type: 'approval' },
-  { id: '5', user: 'Lena Schmidt', action: 'rejected deviation', target: 'DAI_EB-2026-3102', time: 'Yesterday', type: 'approval' },
+  { id: '5', user: 'Lena Schmidt', action: 'rejected deviation', target: 'DAI_EB-2026-3102', time: 'Yesterday', type: 'rejection' },
 ];
 
-const ActivityFeed: React.FC = () => {
-  const getIcon = (type: string) => {
+const customerActivities: ActivityItem[] = [
+  { id: '1', user: 'George Neacsu', action: 'created new customer deviation', target: 'DAI_CUST-2026-8816', time: '12m ago', type: 'creation' },
+  { id: '2', user: 'I A:M Q', action: 'identified high-risk RPN (155) for BMW Group', target: 'DAI_CUST-2026-8816', time: '11m ago', type: 'comment' },
+  { id: '3', user: 'BMW Quality Portal', action: 'uploaded Customer Specification.pdf', target: 'DAI_CUST-2026-0122', time: '2h ago', type: 'upload' },
+  { id: '4', user: 'Marcus Weber', action: 'approved customer deviation review', target: 'DAI_CUST-2025-0988', time: '4h ago', type: 'approval' },
+  { id: '5', user: 'Lena Schmidt', action: 'rejected customer deviation', target: 'DAI_CUST-2026-3102', time: 'Yesterday', type: 'rejection' },
+];
+
+const ActivityFeed: React.FC<ActivityFeedProps> = ({ deviationType = 'Supplier' }) => {
+  const activities = deviationType === 'Customer' ? customerActivities : supplierActivities;
+  const getIcon = (type: string, user?: string) => {
     switch (type) {
       case 'creation':
-        return { icon: 'fa-plus', chip: 'text-blue-700 dark:text-blue-300 bg-blue-100/70 dark:bg-blue-900/25 border-blue-200 dark:border-blue-800' };
+        return { icon: 'fa-plus', chip: 'text-blue-700 dark:text-blue-300 bg-white dark:bg-blue-900/25 border-blue-300 dark:border-blue-800', mirror: false };
       case 'approval':
-        return { icon: 'fa-check', chip: 'text-emerald-700 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800' };
+        return { icon: 'fa-check', chip: 'text-emerald-700 dark:text-emerald-300 bg-white dark:bg-emerald-900/25 border-emerald-300 dark:border-emerald-800', mirror: false };
       case 'upload':
-        return { icon: 'fa-file-arrow-up', chip: 'text-purple-700 dark:text-purple-300 bg-purple-100/70 dark:bg-purple-900/25 border-purple-200 dark:border-purple-800' };
+        return { icon: 'fa-file-arrow-up', chip: 'text-purple-700 dark:text-purple-300 bg-white dark:bg-purple-900/25 border-purple-300 dark:border-purple-800', mirror: false };
       case 'comment':
-        return { icon: 'fa-robot', chip: 'text-amber-700 dark:text-amber-300 bg-amber-100/70 dark:bg-amber-900/25 border-amber-200 dark:border-amber-800' };
+        // Use I A:M Q icon (mirrored chat bubble) for I A:M Q user
+        if (user === 'I A:M Q') {
+          return { icon: 'fa-comment-dots', chip: 'text-emerald-700 dark:text-emerald-300 bg-white dark:bg-emerald-900/25 border-emerald-300 dark:border-emerald-800', mirror: true };
+        }
+        return { icon: 'fa-robot', chip: 'text-amber-700 dark:text-amber-300 bg-white dark:bg-amber-900/25 border-amber-300 dark:border-amber-800', mirror: false };
+      case 'rejection':
+        return { icon: 'fa-circle-xmark', chip: 'text-red-700 dark:text-red-300 bg-white dark:bg-red-900/25 border-red-300 dark:border-red-800', mirror: false };
       default:
-        return { icon: 'fa-circle-dot', chip: 'text-slate-600 dark:text-slate-300 bg-slate-200/60 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700' };
+        return { icon: 'fa-circle-dot', chip: 'text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800/60 border-slate-400 dark:border-slate-700', mirror: false };
     }
   };
 
@@ -44,10 +63,10 @@ const ActivityFeed: React.FC = () => {
         {activities.map((item) => (
           <div key={item.id} className="relative flex gap-4 group">
             {(() => {
-              const meta = getIcon(item.type);
+              const meta = getIcon(item.type, item.user);
               return (
                 <div className={`h-10 w-10 rounded-2xl flex items-center justify-center border shadow-sm z-10 shrink-0 backdrop-blur-xl ${meta.chip} group-hover:scale-105 transition-transform`}>
-                  <i className={`fa-solid ${meta.icon} text-xs`}></i>
+                  <i className={`fa-solid ${meta.icon} text-xs ${meta.mirror ? 'scale-x-[-1]' : ''}`}></i>
                 </div>
               );
             })()}

@@ -40,7 +40,7 @@ export enum WorkflowStatus {
 
 export interface RiskItem {
   id: string;
-  source: 'Supplier' | 'Webasto';
+  source: 'Supplier' | 'Webasto' | 'Customer';
   description: string;
   severity: number;
   occurrence: number;
@@ -83,8 +83,11 @@ export interface SimilarCase {
   reason: string;
 }
 
+export type DeviationType = 'Supplier' | 'Customer';
+
 export interface DeviationRecord {
   id: string;
+  deviationType: DeviationType;
   status: WorkflowStatus;
   classification: {
     language: 'English' | 'Deutsch' | '日本語';
@@ -103,15 +106,20 @@ export interface DeviationRecord {
     furtherMaterials: boolean;
     furtherMaterialsList?: string;
     description: string;
-    supplierIdent: string;
-    supplierName: string;
+    // Supplier-specific fields
+    supplierIdent?: string;
+    supplierName?: string;
+    // Customer-specific fields
+    customerIdent?: string;
+    customerName?: string;
+    customerContact?: string;
+    customerProjectCode?: string;
+    // Common fields
     plant: string;
     projectTitle: string;
     expirationDate: string;
     quantity?: string;
     customerInformed: boolean;
-    customerName?: string;
-    customerContact?: string;
     customerReleaseNecessary: boolean;
     productSafetyRelevant: boolean;
     productSafetyComment?: string;
